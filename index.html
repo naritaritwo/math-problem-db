@@ -469,22 +469,204 @@
         </section>
 
 
-        <!-- 問題登録 -->
-        <section id="page-register" class="page">
-          <h1 class="page-title">問題登録</h1>
+<!-- 問題登録 -->
+<section id="page-register" class="page">
+  <h1 class="page-title">問題登録</h1>
 
-          <div class="card">
-            <h2>新しい問題を登録</h2>
-            <p>
-              ①問題セット → ②資料アップロード →
-              ③大問分割 → ④大問情報 → ⑤確認・登録
-            </p>
+  <div class="card">
 
-            <button class="primary-button">
-              登録を開始
-            </button>
-          </div>
-        </section>
+    <h2>① 問題セット</h2>
+
+    <p>
+      まず、登録する試験・問題集の基本情報を入力します。
+    </p>
+
+    <div style="margin-top:24px;">
+
+      <label for="register-source-type">
+        <strong>出典種別</strong>
+      </label>
+
+      <select id="register-source-type">
+        <option value="">選択してください</option>
+        <option value="大学入試">大学入試</option>
+        <option value="共通テスト">共通テスト</option>
+        <option value="模擬試験">模擬試験</option>
+        <option value="大学別模試">大学別模試</option>
+        <option value="その他">その他</option>
+      </select>
+
+    </div>
+
+<!-- 大学入試専用項目 -->
+<div
+  id="university-exam-fields"
+  style="display:none; margin-top:24px;"
+>
+
+  <hr style="border:0; border-top:1px solid #e0e6e8; margin-bottom:24px;">
+
+  <h3>大学入試情報</h3>
+
+
+  <div style="margin-top:20px;">
+
+    <label for="register-university">
+      <strong>大学</strong>
+    </label>
+
+    <select id="register-university">
+      <option value="">大学を選択してください</option>
+    </select>
+
+  </div>
+
+
+  <div style="margin-top:20px;">
+
+    <label for="register-admission-type">
+      <strong>入試区分</strong>
+    </label>
+
+    <select id="register-admission-type">
+      <option value="">選択してください</option>
+      <option value="前期">前期</option>
+      <option value="中期">中期</option>
+      <option value="後期">後期</option>
+      <option value="総合型">総合型</option>
+      <option value="推薦">推薦</option>
+      <option value="その他">その他</option>
+    </select>
+
+  </div>
+
+
+  <div
+    id="admission-other-field"
+    style="display:none; margin-top:20px;"
+  >
+
+    <label for="register-admission-other">
+      <strong>入試区分の名称</strong>
+    </label>
+
+    <input
+      id="register-admission-other"
+      type="text"
+      placeholder="例：学校推薦型選抜"
+    >
+
+  </div>
+
+
+  <div style="margin-top:20px;">
+
+    <label for="register-humanities-science">
+      <strong>文理区分</strong>
+    </label>
+
+    <select id="register-humanities-science">
+      <option value="">未設定</option>
+      <option value="文系">文系</option>
+      <option value="理系">理系</option>
+      <option value="文理共通">文理共通</option>
+    </select>
+
+  </div>
+
+
+  <div style="margin-top:20px;">
+
+    <label for="register-target-scope">
+      <strong>対象</strong>
+    </label>
+
+    <select id="register-target-scope">
+      <option value="未設定">未設定</option>
+      <option value="全学部共通">全学部共通</option>
+      <option value="対象指定">対象指定</option>
+    </select>
+
+  </div>
+
+</div>
+    <div style="margin-top:20px;">
+
+      <label for="register-year">
+        <strong>年度</strong>
+      </label>
+
+      <input
+        id="register-year"
+        type="number"
+        min="1900"
+        max="2200"
+        placeholder="例：2026"
+      >
+
+    </div>
+
+
+    <div style="margin-top:20px;">
+
+      <label for="register-time">
+        <strong>試験時間（分）</strong>
+      </label>
+
+      <input
+        id="register-time"
+        type="number"
+        min="1"
+        placeholder="未設定でも可"
+      >
+
+    </div>
+
+
+    <div style="margin-top:20px;">
+
+      <label for="register-score">
+        <strong>数学の満点</strong>
+      </label>
+
+      <input
+        id="register-score"
+        type="number"
+        min="1"
+        placeholder="未設定でも可"
+      >
+
+    </div>
+
+
+    <div style="margin-top:20px;">
+
+      <label for="register-notes">
+        <strong>メモ</strong>
+      </label>
+
+      <textarea
+        id="register-notes"
+        rows="4"
+        placeholder="必要な場合のみ入力"
+      ></textarea>
+
+    </div>
+
+
+    <div style="margin-top:28px;">
+
+      <button
+        id="register-next-button"
+        class="primary-button"
+      >
+        次へ
+      </button>
+
+    </div>
+
+  </div>
+</section>
 
       </main>
     </div>
@@ -558,7 +740,54 @@
 
       });
 
+/* ===== 問題登録：入力欄切替 ===== */
 
+const registerSourceType =
+  document.getElementById("register-source-type");
+
+const universityExamFields =
+  document.getElementById("university-exam-fields");
+
+const registerAdmissionType =
+  document.getElementById("register-admission-type");
+
+const admissionOtherField =
+  document.getElementById("admission-other-field");
+
+
+function updateRegisterFields() {
+
+  /* 大学入試専用欄 */
+  if (registerSourceType.value === "大学入試") {
+    universityExamFields.style.display = "block";
+  } else {
+    universityExamFields.style.display = "none";
+  }
+
+}
+
+
+function updateAdmissionFields() {
+
+  /* 入試区分「その他」 */
+  if (registerAdmissionType.value === "その他") {
+    admissionOtherField.style.display = "block";
+  } else {
+    admissionOtherField.style.display = "none";
+  }
+
+}
+
+
+registerSourceType.addEventListener(
+  "change",
+  updateRegisterFields
+);
+
+registerAdmissionType.addEventListener(
+  "change",
+  updateAdmissionFields
+);
     /* ===== DB確認 ===== */
 
     async function loadHomeData() {
