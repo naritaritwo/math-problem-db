@@ -676,7 +676,114 @@
       <option value="全学部共通">全学部共通</option>
       <option value="対象指定">対象指定</option>
     </select>
+    <!-- 対象指定 -->
+<div
+  id="target-detail-area"
+  style="
+    display:none;
+    margin-top:16px;
+    padding:16px;
+    background:#f7fafb;
+    border-radius:10px;
+  "
+>
 
+  <strong>対象学部・学科等</strong>
+
+  <p style="margin:6px 0 14px; font-size:13px; color:#607d8b;">
+    この問題セットの対象となる学部・学科等を指定します。
+  </p>
+
+  <div>
+    <label for="register-faculty">
+      学部
+    </label>
+
+    <select id="register-faculty">
+      <option value="">学部を選択してください</option>
+    </select>
+
+    <button
+      type="button"
+      id="show-add-faculty-button"
+      class="secondary-button"
+      style="margin-left:8px;"
+    >
+      ＋学部を追加
+    </button>
+    <div
+  id="add-faculty-area"
+  style="
+    display:none;
+    margin-top:10px;
+    padding:12px;
+    background:white;
+    border:1px solid #d7e2e5;
+    border-radius:8px;
+  "
+>
+
+  <label for="new-faculty-name">
+    新しい学部名
+  </label>
+
+  <input
+    type="text"
+    id="new-faculty-name"
+    placeholder="例：医学部"
+    style="margin-left:8px;"
+  >
+
+  <button
+    type="button"
+    id="save-faculty-button"
+    class="primary-button"
+    style="margin-left:8px;"
+  >
+    保存
+  </button>
+
+  <button
+    type="button"
+    id="cancel-faculty-button"
+    class="secondary-button"
+    style="margin-left:6px;"
+  >
+    キャンセル
+  </button>
+
+  <div
+    id="faculty-message"
+    style="margin-top:8px; font-size:13px;"
+  ></div>
+
+</div>
+  </div>
+
+
+  <div style="margin-top:14px;">
+
+    <label for="register-department">
+      学科等
+    </label>
+
+    <select id="register-department">
+      <option value="">指定なし</option>
+    </select>
+
+    <button
+      type="button"
+      id="show-add-department-button"
+      class="secondary-button"
+      style="margin-left:8px;"
+    >
+      ＋学科等を追加
+    </button>
+
+  </div>
+
+</div>
+    
   </div>
 
 </div>
@@ -1006,7 +1113,71 @@ saveUniversityButton.addEventListener(
     }, 800);
   }
 );
-    
+
+/* ===== 学部マスタ読込 ===== */
+
+async function loadFaculties() {
+
+  const universityId =
+    document.getElementById("register-university").value;
+
+  const facultySelect =
+    document.getElementById("register-faculty");
+
+  const departmentSelect =
+    document.getElementById("register-department");
+
+
+  /* 一度リセット */
+  facultySelect.innerHTML =
+    '<option value="">学部を選択してください</option>';
+
+  departmentSelect.innerHTML =
+    '<option value="">指定なし</option>';
+
+
+  /* 大学未選択ならここで終了 */
+  if (!universityId) {
+    return;
+  }
+
+
+  const { data, error } = await client
+    .from("math_faculties")
+    .select("id, name")
+    .eq("university_id", universityId)
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("name");
+
+
+  if (error) {
+
+    console.error(
+      "学部一覧取得エラー:",
+      error
+    );
+
+    facultySelect.innerHTML =
+      '<option value="">学部一覧を取得できませんでした</option>';
+
+    return;
+  }
+
+
+  data.forEach(faculty => {
+
+    const option =
+      document.createElement("option");
+
+    option.value = faculty.id;
+    option.textContent = faculty.name;
+
+    facultySelect.appendChild(option);
+
+  });
+}
+
 /* ===== 問題登録：入力欄切替 ===== */
 
 const registerSourceType =
@@ -1021,6 +1192,11 @@ const registerAdmissionType =
 const admissionOtherField =
   document.getElementById("admission-other-field");
 
+const registerTargetScope =
+  document.getElementById("register-target-scope");
+
+const targetDetailArea =
+  document.getElementById("target-detail-area");
 
 function updateRegisterFields() {
 
@@ -1044,7 +1220,15 @@ function updateAdmissionFields() {
   }
 
 }
+function updateTargetFields() {
 
+  if (registerTargetScope.value === "対象指定") {
+    targetDetailArea.style.display = "block";
+  } else {
+    targetDetailArea.style.display = "none";
+  }
+
+}
 
 registerSourceType.addEventListener(
   "change",
@@ -1054,6 +1238,130 @@ registerSourceType.addEventListener(
 registerAdmissionType.addEventListener(
   "change",
   updateAdmissionFields
+);
+
+registerTargetScope.addEventListener(
+  "change",
+  updateTargetFields
+);
+
+document
+  .getElementById("register-university")
+  .addEventListener(
+    "change",
+    loadFaculties
+  );
+
+  const showAddFacultyButton =
+  document.getElementById("show-add-faculty-button");
+
+const addFacultyArea =
+  document.getElementById("add-faculty-area");
+
+const newFacultyName =
+  document.getElementById("new-faculty-name");
+
+const cancelFacultyButton =
+  document.getElementById("cancel-faculty-button");
+
+
+showAddFacultyButton.addEventListener(
+  "click",
+  () => {
+
+    addFacultyArea.style.display = "block";
+
+    newFacultyName.focus();
+
+  }
+);
+
+
+cancelFacultyButton.addEventListener(
+  "click",
+  () => {
+
+    addFacultyArea.style.display = "none";
+
+    newFacultyName.value = "";
+
+    document.getElementById(
+      "faculty-message"
+    ).textContent = "";
+
+  }
+);
+
+const saveFacultyButton =
+  document.getElementById("save-faculty-button");
+
+
+saveFacultyButton.addEventListener(
+  "click",
+  async () => {
+
+    const universityId =
+      document.getElementById("register-university").value;
+
+    const facultyName =
+      newFacultyName.value.trim();
+
+    const facultyMessage =
+      document.getElementById("faculty-message");
+
+
+    if (!universityId) {
+      facultyMessage.textContent =
+        "先に大学を選択してください。";
+      return;
+    }
+
+
+    if (!facultyName) {
+      facultyMessage.textContent =
+        "学部名を入力してください。";
+      return;
+    }
+
+
+    const { data, error } = await client
+      .from("math_faculties")
+      .insert({
+        university_id: universityId,
+        name: facultyName
+      })
+      .select("id, name")
+      .single();
+
+
+    if (error) {
+
+      console.error(
+        "学部登録エラー:",
+        error
+      );
+
+      facultyMessage.textContent =
+        "学部を登録できませんでした。";
+
+      return;
+    }
+
+
+    await loadFaculties();
+
+    document.getElementById(
+      "register-faculty"
+    ).value = data.id;
+
+
+    addFacultyArea.style.display = "none";
+
+    newFacultyName.value = "";
+
+    facultyMessage.textContent = "";
+
+  }
 );
     /* ===== DB確認 ===== */
 
