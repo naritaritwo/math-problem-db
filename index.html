@@ -515,9 +515,99 @@
       <strong>大学</strong>
     </label>
 
-    <select id="register-university">
-      <option value="">大学を選択してください</option>
+<div style="display:flex; gap:8px; align-items:center; margin-top:6px;">
+
+  <select
+    id="register-university"
+    style="flex:1;"
+  >
+    <option value="">大学を選択してください</option>
+  </select>
+
+  <button
+    type="button"
+    id="show-add-university-button"
+    class="secondary-button"
+  >
+    ＋大学を追加
+  </button>
+
+</div>
+
+
+<!-- 大学追加欄 -->
+<div
+  id="add-university-area"
+  style="
+    display:none;
+    margin-top:12px;
+    padding:16px;
+    background:#f7fafb;
+    border-radius:10px;
+  "
+>
+
+  <strong>大学を新規登録</strong>
+
+
+  <div style="margin-top:14px;">
+
+    <label for="new-university-name">
+      大学名
+    </label>
+
+    <input
+      id="new-university-name"
+      type="text"
+      placeholder="例：弘前大学"
+    >
+
+  </div>
+
+
+  <div style="margin-top:14px;">
+
+    <label for="new-university-type">
+      設置区分
+    </label>
+
+    <select id="new-university-type">
+      <option value="未設定">未設定</option>
+      <option value="国立">国立</option>
+      <option value="公立">公立</option>
+      <option value="私立">私立</option>
+      <option value="その他">その他</option>
     </select>
+
+  </div>
+
+
+  <div style="margin-top:14px; display:flex; gap:8px;">
+
+    <button
+      type="button"
+      id="save-university-button"
+      class="primary-button"
+    >
+      登録
+    </button>
+
+    <button
+      type="button"
+      id="cancel-university-button"
+      class="secondary-button"
+    >
+      キャンセル
+    </button>
+
+  </div>
+
+  <div
+    id="university-message"
+    class="message"
+  ></div>
+
+</div>
 
   </div>
 
@@ -784,6 +874,139 @@ async function loadUniversities() {
     universitySelect.appendChild(option);
   });
 }
+/* ===== 大学追加欄：表示切替 ===== */
+
+const showAddUniversityButton =
+  document.getElementById("show-add-university-button");
+
+const addUniversityArea =
+  document.getElementById("add-university-area");
+
+const cancelUniversityButton =
+  document.getElementById("cancel-university-button");
+
+const newUniversityName =
+  document.getElementById("new-university-name");
+
+const newUniversityType =
+  document.getElementById("new-university-type");
+
+const universityMessage =
+  document.getElementById("university-message");
+
+
+showAddUniversityButton.addEventListener(
+  "click",
+  () => {
+
+    addUniversityArea.style.display = "block";
+
+    newUniversityName.focus();
+  }
+);
+
+
+cancelUniversityButton.addEventListener(
+  "click",
+  () => {
+
+    addUniversityArea.style.display = "none";
+
+    newUniversityName.value = "";
+    newUniversityType.value = "未設定";
+    universityMessage.textContent = "";
+  }
+);
+
+/* ===== 大学マスタ：新規登録 ===== */
+
+const saveUniversityButton =
+  document.getElementById("save-university-button");
+
+
+saveUniversityButton.addEventListener(
+  "click",
+  async () => {
+
+    const name =
+      newUniversityName.value.trim();
+
+    const installationType =
+      newUniversityType.value;
+
+
+    /* 大学名の入力確認 */
+    if (!name) {
+      universityMessage.textContent =
+        "大学名を入力してください。";
+      return;
+    }
+
+
+    universityMessage.textContent =
+      "登録中...";
+
+    saveUniversityButton.disabled = true;
+
+
+    const { data, error } = await client
+      .from("math_universities")
+      .insert({
+        name: name,
+        installation_type: installationType
+      })
+      .select("id, name, installation_type")
+      .single();
+
+
+    saveUniversityButton.disabled = false;
+
+
+    if (error) {
+
+      console.error(
+        "大学登録エラー:",
+        error
+      );
+
+      universityMessage.textContent =
+        "登録できませんでした：" +
+        error.message;
+
+      return;
+    }
+
+
+    /* 最新の大学一覧を再取得 */
+    await loadUniversities();
+
+
+    /* 今登録した大学を選択 */
+    document
+      .getElementById("register-university")
+      .value = data.id;
+
+
+    /* 入力欄を初期化 */
+    newUniversityName.value = "";
+    newUniversityType.value = "未設定";
+
+    universityMessage.textContent =
+      "登録しました。";
+
+
+    /* 少しだけ表示してから閉じる */
+    setTimeout(() => {
+
+      addUniversityArea.style.display =
+        "none";
+
+      universityMessage.textContent = "";
+
+    }, 800);
+  }
+);
+    
 /* ===== 問題登録：入力欄切替 ===== */
 
 const registerSourceType =
