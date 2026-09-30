@@ -739,7 +739,51 @@
         });
 
       });
+/* ===== 大学マスタ読込 ===== */
 
+async function loadUniversities() {
+
+  const universitySelect =
+    document.getElementById("register-university");
+
+  const { data, error } = await client
+    .from("math_universities")
+    .select("id, name, installation_type")
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("name");
+
+  if (error) {
+    console.error("大学一覧取得エラー:", error);
+
+    universitySelect.innerHTML =
+      '<option value="">大学一覧を取得できませんでした</option>';
+
+    return;
+  }
+
+  universitySelect.innerHTML =
+    '<option value="">大学を選択してください</option>';
+
+  data.forEach(university => {
+
+    const option =
+      document.createElement("option");
+
+    option.value = university.id;
+
+    option.textContent =
+      university.name +
+      (
+        university.installation_type &&
+        university.installation_type !== "未設定"
+          ? "（" + university.installation_type + "）"
+          : ""
+      );
+
+    universitySelect.appendChild(option);
+  });
+}
 /* ===== 問題登録：入力欄切替 ===== */
 
 const registerSourceType =
@@ -834,7 +878,7 @@ registerAdmissionType.addEventListener(
           .textContent = session.user.email;
 
         await loadHomeData();
-
+        await loadUniversities();
       } else {
 
         loginScreen.style.display = "flex";
