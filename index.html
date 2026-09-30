@@ -1078,6 +1078,104 @@ registerAdmissionType.addEventListener(
     }
 
 
+    /* ===== 問題登録：問題セット下書き保存 ===== */
+
+const registerNextButton =
+  document.getElementById("register-next-button");
+
+
+registerNextButton.addEventListener(
+  "click",
+  async () => {
+
+    const sourceType =
+      document.getElementById("register-source-type").value;
+
+    const yearValue =
+      document.getElementById("register-year").value;
+
+    const timeValue =
+      document.getElementById("register-time").value;
+
+    const scoreValue =
+      document.getElementById("register-score").value;
+
+    const notes =
+      document.getElementById("register-notes").value.trim();
+
+
+    /* 必須項目チェック */
+
+    if (!sourceType) {
+      alert("出典種別を選択してください。");
+      return;
+    }
+
+    if (!yearValue) {
+      alert("年度を入力してください。");
+      return;
+    }
+
+
+    /* 保存するデータ */
+
+    const problemSetData = {
+      source_type: sourceType,
+      year: Number(yearValue),
+      exam_time_minutes:
+        timeValue ? Number(timeValue) : null,
+      math_total_score:
+        scoreValue ? Number(scoreValue) : null,
+      notes:
+        notes || null,
+      status: "draft"
+    };
+
+
+    registerNextButton.disabled = true;
+    registerNextButton.textContent = "保存中...";
+
+
+    const { data, error } = await client
+      .from("math_problem_sets")
+      .insert(problemSetData)
+      .select("id, set_code")
+      .single();
+
+
+    registerNextButton.disabled = false;
+    registerNextButton.textContent = "次へ";
+
+
+    if (error) {
+
+      console.error(
+        "問題セット保存エラー:",
+        error
+      );
+
+      alert(
+        "問題セットを保存できませんでした。\n" +
+        error.message
+      );
+
+      return;
+    }
+
+
+    console.log(
+      "問題セット保存成功:",
+      data
+    );
+
+
+    alert(
+      "問題セットの下書きを保存しました。\n" +
+      "管理番号：" + data.set_code
+    );
+
+  }
+);
     /* ===== ログイン状態 ===== */
 
     async function updateScreen() {
