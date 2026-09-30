@@ -780,6 +780,165 @@
       ＋学科等を追加
     </button>
 
+  <div
+  id="add-department-area"
+  style="
+    display:none;
+    margin-top:10px;
+    padding:12px;
+    background:white;
+    border:1px solid #d7e2e5;
+    border-radius:8px;
+  "
+>
+
+  <label for="new-department-name">
+    新しい学科等の名称
+  </label>
+
+  <input
+    type="text"
+    id="new-department-name"
+    placeholder="例：医学科"
+    style="margin-left:8px;"
+  >
+
+  <button
+    type="button"
+    id="save-department-button"
+    class="primary-button"
+    style="margin-left:8px;"
+  >
+    保存
+  </button>
+
+  <button
+    type="button"
+    id="cancel-department-button"
+    class="secondary-button"
+    style="margin-left:6px;"
+  >
+    キャンセル
+  </button>
+
+  <div
+    id="department-message"
+    style="margin-top:8px; font-size:13px;"
+  ></div>
+
+</div>
+
+    const showAddDepartmentButton =
+  document.getElementById("show-add-department-button");
+
+const addDepartmentArea =
+  document.getElementById("add-department-area");
+
+const newDepartmentName =
+  document.getElementById("new-department-name");
+
+const cancelDepartmentButton =
+  document.getElementById("cancel-department-button");
+
+
+showAddDepartmentButton.addEventListener(
+  "click",
+  () => {
+
+    addDepartmentArea.style.display = "block";
+
+    newDepartmentName.focus();
+
+  }
+);
+
+
+cancelDepartmentButton.addEventListener(
+  "click",
+  () => {
+
+    addDepartmentArea.style.display = "none";
+
+    newDepartmentName.value = "";
+
+    document.getElementById(
+      "department-message"
+    ).textContent = "";
+
+  }
+);
+
+const saveDepartmentButton =
+  document.getElementById("save-department-button");
+
+
+saveDepartmentButton.addEventListener(
+  "click",
+  async () => {
+
+    const facultyId =
+      document.getElementById("register-faculty").value;
+
+    const departmentName =
+      newDepartmentName.value.trim();
+
+    const departmentMessage =
+      document.getElementById("department-message");
+
+
+    if (!facultyId) {
+      departmentMessage.textContent =
+        "先に学部を選択してください。";
+      return;
+    }
+
+
+    if (!departmentName) {
+      departmentMessage.textContent =
+        "学科等の名称を入力してください。";
+      return;
+    }
+
+
+    const { data, error } = await client
+      .from("math_departments")
+      .insert({
+        faculty_id: facultyId,
+        name: departmentName
+      })
+      .select("id, name")
+      .single();
+
+
+    if (error) {
+
+      console.error(
+        "学科等登録エラー:",
+        error
+      );
+
+      departmentMessage.textContent =
+        "学科等を登録できませんでした。";
+
+      return;
+    }
+
+
+    await loadDepartments();
+
+    document.getElementById(
+      "register-department"
+    ).value = data.id;
+
+
+    addDepartmentArea.style.display = "none";
+
+    newDepartmentName.value = "";
+
+    departmentMessage.textContent = "";
+
+  }
+);
   </div>
 
 </div>
@@ -1141,6 +1300,63 @@ async function loadFaculties() {
     return;
   }
 
+/* ===== 学科等マスタ読込 ===== */
+
+async function loadDepartments() {
+
+  const facultyId =
+    document.getElementById("register-faculty").value;
+
+  const departmentSelect =
+    document.getElementById("register-department");
+
+
+  /* 一度リセット */
+  departmentSelect.innerHTML =
+    '<option value="">指定なし</option>';
+
+
+  /* 学部未選択なら終了 */
+  if (!facultyId) {
+    return;
+  }
+
+
+  const { data, error } = await client
+    .from("math_departments")
+    .select("id, name")
+    .eq("faculty_id", facultyId)
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("name");
+
+
+  if (error) {
+
+    console.error(
+      "学科等一覧取得エラー:",
+      error
+    );
+
+    departmentSelect.innerHTML =
+      '<option value="">学科等を取得できませんでした</option>';
+
+    return;
+  }
+
+
+  data.forEach(department => {
+
+    const option =
+      document.createElement("option");
+
+    option.value = department.id;
+    option.textContent = department.name;
+
+    departmentSelect.appendChild(option);
+
+  });
+}
 
   const { data, error } = await client
     .from("math_faculties")
@@ -1252,6 +1468,13 @@ document
     loadFaculties
   );
 
+document
+  .getElementById("register-faculty")
+  .addEventListener(
+    "change",
+    loadDepartments
+  );
+    
   const showAddFacultyButton =
   document.getElementById("show-add-faculty-button");
 
