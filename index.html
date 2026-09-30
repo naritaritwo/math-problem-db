@@ -868,77 +868,7 @@ cancelDepartmentButton.addEventListener(
   }
 );
 
-const saveDepartmentButton =
-  document.getElementById("save-department-button");
 
-
-saveDepartmentButton.addEventListener(
-  "click",
-  async () => {
-
-    const facultyId =
-      document.getElementById("register-faculty").value;
-
-    const departmentName =
-      newDepartmentName.value.trim();
-
-    const departmentMessage =
-      document.getElementById("department-message");
-
-
-    if (!facultyId) {
-      departmentMessage.textContent =
-        "先に学部を選択してください。";
-      return;
-    }
-
-
-    if (!departmentName) {
-      departmentMessage.textContent =
-        "学科等の名称を入力してください。";
-      return;
-    }
-
-
-    const { data, error } = await client
-      .from("math_departments")
-      .insert({
-        faculty_id: facultyId,
-        name: departmentName
-      })
-      .select("id, name")
-      .single();
-
-
-    if (error) {
-
-      console.error(
-        "学科等登録エラー:",
-        error
-      );
-
-      departmentMessage.textContent =
-        "学科等を登録できませんでした。";
-
-      return;
-    }
-
-
-    await loadDepartments();
-
-    document.getElementById(
-      "register-department"
-    ).value = data.id;
-
-
-    addDepartmentArea.style.display = "none";
-
-    newDepartmentName.value = "";
-
-    departmentMessage.textContent = "";
-
-  }
-);
   </div>
 
 </div>
@@ -1586,6 +1516,81 @@ saveFacultyButton.addEventListener(
 
   }
 );
+
+    /* ===== 学科等保存 ===== */
+
+const saveDepartmentButton =
+  document.getElementById("save-department-button");
+
+
+saveDepartmentButton.addEventListener(
+  "click",
+  async () => {
+
+    const facultyId =
+      document.getElementById("register-faculty").value;
+
+    const departmentName =
+      newDepartmentName.value.trim();
+
+    const departmentMessage =
+      document.getElementById("department-message");
+
+
+    if (!facultyId) {
+      departmentMessage.textContent =
+        "先に学部を選択してください。";
+      return;
+    }
+
+
+    if (!departmentName) {
+      departmentMessage.textContent =
+        "学科等の名称を入力してください。";
+      return;
+    }
+
+
+    const { data, error } = await client
+      .from("math_departments")
+      .insert({
+        faculty_id: facultyId,
+        name: departmentName
+      })
+      .select("id, name")
+      .single();
+
+
+    if (error) {
+
+      console.error(
+        "学科等登録エラー:",
+        error
+      );
+
+      departmentMessage.textContent =
+        "学科等を登録できませんでした。";
+
+      return;
+    }
+
+
+    await loadDepartments();
+
+    document.getElementById(
+      "register-department"
+    ).value = data.id;
+
+
+    addDepartmentArea.style.display = "none";
+
+    newDepartmentName.value = "";
+
+    departmentMessage.textContent = "";
+
+  }
+);
+    
     /* ===== DB確認 ===== */
 
     async function loadHomeData() {
