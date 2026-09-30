@@ -9,49 +9,159 @@
 <body>
   <h1>数学問題データベース</h1>
 
-  <h2>Supabase 接続テスト</h2>
+  <h2>ログイン</h2>
 
-  <p id="status">接続確認中...</p>
+  <div id="login-area">
+    <p>
+      <label>
+        メールアドレス<br>
+        <input type="email" id="email">
+      </label>
+    </p>
+
+    <p>
+      <label>
+        パスワード<br>
+        <input type="password" id="password">
+      </label>
+    </p>
+
+    <button id="login-button">ログイン</button>
+  </div>
+
+  <div id="logged-in-area" style="display:none;">
+    <p id="user-info"></p>
+    <button id="logout-button">ログアウト</button>
+  </div>
+
+  <h2>Supabase 接続テスト</h2>
+  <p id="status">ログインしてください。</p>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script>
-    const SUPABASE_URL = "https://glprilkkyelhqfbuovam.supabase.co";
+    const SUPABASE_URL =
+      "https://glprilkkyelhqfbuovam.supabase.co";
 
-    const SUPABASE_KEY = "sb_publishable_5ajNzXHVCKj6GBIkN3aVlg_Ba5zMUS0";
+    const SUPABASE_KEY =
+      "sb_publishable_5ajNzXHVCKj6GBIkN3aVlg_Ba5zMUS0";
 
     const client = supabase.createClient(
       SUPABASE_URL,
       SUPABASE_KEY
     );
 
-    async function testConnection() {
-      const status = document.getElementById("status");
+    const loginArea =
+      document.getElementById("login-area");
 
-      try {
-        const { data, error } = await client
-          .from("math_fields")
-          .select("name")
-          .order("sort_order");
+    const loggedInArea =
+      document.getElementById("logged-in-area");
 
-        if (error) {
-          status.textContent =
-            "❌ Supabase接続エラー：" + error.message;
-          return;
-        }
+    const status =
+      document.getElementById("status");
+
+    const userInfo =
+      document.getElementById("user-info");
+
+
+    async function updateScreen() {
+
+      const {
+        data: { session }
+      } = await client.auth.getSession();
+
+      if (session) {
+
+        loginArea.style.display = "none";
+        loggedInArea.style.display = "block";
+
+        userInfo.textContent =
+          "ログイン中：" + session.user.email;
+
+        await testConnection();
+
+      } else {
+
+        loginArea.style.display = "block";
+        loggedInArea.style.display = "none";
 
         status.textContent =
-          "✅ Supabase接続成功！ 分野マスタ " +
-          data.length +
-          "件を取得しました。";
-
-      } catch (error) {
-        status.textContent =
-          "❌ 接続処理エラー：" + error.message;
+          "ログインしてください。";
       }
     }
 
-    testConnection();
+
+    async function testConnection() {
+
+      status.textContent =
+        "データベース確認中...";
+
+      const { data, error } = await client
+        .from("math_fields")
+        .select("name")
+        .order("sort_order");
+
+      if (error) {
+
+        status.textContent =
+          "❌ Supabase接続エラー：" +
+          error.message;
+
+        return;
+      }
+
+      status.textContent =
+        "✅ Supabase接続成功！ 分野マスタ " +
+        data.length +
+        "件を取得しました。";
+    }
+
+
+    document
+      .getElementById("login-button")
+      .addEventListener("click", async () => {
+
+        const email =
+          document.getElementById("email").value;
+
+        const password =
+          document.getElementById("password").value;
+
+        status.textContent =
+          "ログイン中...";
+
+        const { error } =
+          await client.auth.signInWithPassword({
+            email: email,
+            password: password
+          });
+
+        if (error) {
+
+          status.textContent =
+            "❌ ログインエラー：" +
+            error.message;
+
+          return;
+        }
+
+        await updateScreen();
+      });
+
+
+    document
+      .getElementById("logout-button")
+      .addEventListener("click", async () => {
+
+        await client.auth.signOut();
+
+        await updateScreen();
+      });
+
+
+    updateScreen();
+
   </script>
+
 </body>
 </html>
