@@ -1230,6 +1230,42 @@ async function loadFaculties() {
     return;
   }
 
+  const { data, error } = await client
+    .from("math_faculties")
+    .select("id, name")
+    .eq("university_id", universityId)
+    .eq("is_active", true)
+    .order("sort_order")
+    .order("name");
+
+
+  if (error) {
+
+    console.error(
+      "学部一覧取得エラー:",
+      error
+    );
+
+    facultySelect.innerHTML =
+      '<option value="">学部一覧を取得できませんでした</option>';
+
+    return;
+  }
+
+
+  data.forEach(faculty => {
+
+    const option =
+      document.createElement("option");
+
+    option.value = faculty.id;
+    option.textContent = faculty.name;
+
+    facultySelect.appendChild(option);
+
+  });
+}
+
 /* ===== 学科等マスタ読込 ===== */
 
 async function loadDepartments() {
@@ -1287,43 +1323,7 @@ async function loadDepartments() {
 
   });
 }
-
-  const { data, error } = await client
-    .from("math_faculties")
-    .select("id, name")
-    .eq("university_id", universityId)
-    .eq("is_active", true)
-    .order("sort_order")
-    .order("name");
-
-
-  if (error) {
-
-    console.error(
-      "学部一覧取得エラー:",
-      error
-    );
-
-    facultySelect.innerHTML =
-      '<option value="">学部一覧を取得できませんでした</option>';
-
-    return;
-  }
-
-
-  data.forEach(faculty => {
-
-    const option =
-      document.createElement("option");
-
-    option.value = faculty.id;
-    option.textContent = faculty.name;
-
-    facultySelect.appendChild(option);
-
-  });
-}
-
+    
 /* ===== 問題登録：入力欄切替 ===== */
 
 const registerSourceType =
