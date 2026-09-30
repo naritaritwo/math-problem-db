@@ -1852,15 +1852,25 @@ if (sourceType === "大学入試") {
   }
 
 /* 対象学部・学科等を保存 */
-if (targetScope === "対象指定") {
+
+ const targetScopeForSave =
+  document.getElementById("register-target-scope").value;
+
+const facultyIdForSave =
+  document.getElementById("register-faculty").value;
+
+const departmentIdForSave =
+  document.getElementById("register-department").value;
+  
+  if (targetScopeForSave === "対象指定") {
 
   const { error: targetError } =
     await client
       .from("math_problem_set_targets")
       .insert({
         problem_set_id: data.id,
-        faculty_id: facultyId,
-        department_id: departmentId || null
+        faculty_id: facultyIdForSave,
+        department_id: departmentIdForSave || null
       });
 
   if (targetError) {
