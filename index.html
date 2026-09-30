@@ -828,47 +828,6 @@
 
 </div>
 
-    const showAddDepartmentButton =
-  document.getElementById("show-add-department-button");
-
-const addDepartmentArea =
-  document.getElementById("add-department-area");
-
-const newDepartmentName =
-  document.getElementById("new-department-name");
-
-const cancelDepartmentButton =
-  document.getElementById("cancel-department-button");
-
-
-showAddDepartmentButton.addEventListener(
-  "click",
-  () => {
-
-    addDepartmentArea.style.display = "block";
-
-    newDepartmentName.focus();
-
-  }
-);
-
-
-cancelDepartmentButton.addEventListener(
-  "click",
-  () => {
-
-    addDepartmentArea.style.display = "none";
-
-    newDepartmentName.value = "";
-
-    document.getElementById(
-      "department-message"
-    ).textContent = "";
-
-  }
-);
-
-
   </div>
 
 </div>
@@ -1517,8 +1476,50 @@ saveFacultyButton.addEventListener(
   }
 );
 
-    /* ===== 学科等保存 ===== */
+    /* ===== 学科等入力欄：開閉 ===== */
 
+        const showAddDepartmentButton =
+  document.getElementById("show-add-department-button");
+
+const addDepartmentArea =
+  document.getElementById("add-department-area");
+
+const newDepartmentName =
+  document.getElementById("new-department-name");
+
+const cancelDepartmentButton =
+  document.getElementById("cancel-department-button");
+
+
+showAddDepartmentButton.addEventListener(
+  "click",
+  () => {
+
+    addDepartmentArea.style.display = "block";
+
+    newDepartmentName.focus();
+
+  }
+);
+
+
+cancelDepartmentButton.addEventListener(
+  "click",
+  () => {
+
+    addDepartmentArea.style.display = "none";
+
+    newDepartmentName.value = "";
+
+    document.getElementById(
+      "department-message"
+    ).textContent = "";
+
+  }
+);
+
+    /* ===== 学科等保存 ===== */
+       
 const saveDepartmentButton =
   document.getElementById("save-department-button");
 
