@@ -1077,7 +1077,8 @@ registerAdmissionType.addEventListener(
         .textContent = count ?? 0;
     }
 
-
+    let currentProblemSetId = null;
+    
     /* ===== 問題登録：問題セット下書き保存 ===== */
 
 const registerNextButton =
@@ -1087,7 +1088,13 @@ const registerNextButton =
 registerNextButton.addEventListener(
   "click",
   async () => {
-
+    /* すでに下書きを作成済みなら新規作成しない */
+    if (currentProblemSetId) {
+      alert(
+        "この問題セットの下書きはすでに作成されています。"
+      );
+      return;
+    }
     const sourceType =
       document.getElementById("register-source-type").value;
 
@@ -1116,6 +1123,42 @@ registerNextButton.addEventListener(
       return;
     }
 
+    /* 大学入試の必須項目チェック */
+
+if (sourceType === "大学入試") {
+
+  const universityId =
+    document.getElementById("register-university").value;
+
+  const admissionType =
+    document.getElementById("register-admission-type").value;
+
+  const admissionOtherName =
+    document.getElementById("register-admission-other")
+      .value
+      .trim();
+
+
+  if (!universityId) {
+    alert("大学を選択してください。");
+    return;
+  }
+
+
+  if (!admissionType) {
+    alert("入試区分を選択してください。");
+    return;
+  }
+
+
+  if (
+    admissionType === "その他" &&
+    !admissionOtherName
+  ) {
+    alert("入試区分の名称を入力してください。");
+    return;
+  }
+}
 
     /* 保存するデータ */
 
@@ -1163,16 +1206,101 @@ registerNextButton.addEventListener(
     }
 
 
-    console.log(
-      "問題セット保存成功:",
-      data
-    );
+console.log(
+  "問題セット保存成功:",
+  data
+);
+currentProblemSetId = data.id;
 
+/* ===== 大学入試の場合は専用情報も保存 ===== */
+
+if (sourceType === "大学入試") {
+
+  const universityId =
+    document.getElementById("register-university").value;
+
+  const admissionType =
+    document.getElementById("register-admission-type").value;
+
+  const admissionOtherName =
+    document.getElementById("register-admission-other")
+      .value
+      .trim();
+
+  const humanitiesScienceType =
+    document.getElementById("register-humanities-science").value;
+
+  const targetScope =
+    document.getElementById("register-target-scope").value;
+
+
+  /* 必須項目確認 */
+
+  if (!universityId || !admissionType) {
 
     alert(
-      "問題セットの下書きを保存しました。\n" +
-      "管理番号：" + data.set_code
+      "問題セット本体は保存されましたが、" +
+      "大学または入試区分が未入力のため、" +
+      "大学入試情報は保存されませんでした。"
     );
+
+    return;
+  }
+
+
+  if (
+    admissionType === "その他" &&
+    !admissionOtherName
+  ) {
+
+    alert(
+      "問題セット本体は保存されましたが、" +
+      "入試区分「その他」の名称が未入力です。"
+    );
+
+    return;
+  }
+
+
+  const { error: universityDetailError } =
+    await client
+      .from("math_university_exam_details")
+      .insert({
+        problem_set_id: data.id,
+        university_id: universityId,
+        admission_type: admissionType,
+        admission_other_name:
+          admissionType === "その他"
+            ? admissionOtherName
+            : null,
+        humanities_science_type:
+          humanitiesScienceType || null,
+        target_scope: targetScope
+      });
+
+
+  if (universityDetailError) {
+
+    console.error(
+      "大学入試情報保存エラー:",
+      universityDetailError
+    );
+
+    alert(
+      "問題セット本体は保存されましたが、" +
+      "大学入試情報を保存できませんでした。\n" +
+      universityDetailError.message
+    );
+
+    return;
+  }
+}
+
+
+alert(
+  "問題セットの下書きを保存しました。\n" +
+  "管理番号：" + data.set_code
+);
 
   }
 );
