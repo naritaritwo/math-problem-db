@@ -9,8 +9,49 @@
 <body>
   <h1>数学問題データベース</h1>
 
-  <p>GitHub Pages 接続テスト</p>
+  <h2>Supabase 接続テスト</h2>
 
-  <p>この画面が表示されれば、GitHub Pages は正常に動作しています。</p>
+  <p id="status">接続確認中...</p>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    const SUPABASE_URL = "https://glprilkkyelhqfbuovam.supabase.co";
+
+    const SUPABASE_KEY = "sb_publishable_5ajNzXHVCKj6GBIkN3aVlg_Ba5zMUS0";
+
+    const client = supabase.createClient(
+      SUPABASE_URL,
+      SUPABASE_KEY
+    );
+
+    async function testConnection() {
+      const status = document.getElementById("status");
+
+      try {
+        const { data, error } = await client
+          .from("math_fields")
+          .select("name")
+          .order("sort_order");
+
+        if (error) {
+          status.textContent =
+            "❌ Supabase接続エラー：" + error.message;
+          return;
+        }
+
+        status.textContent =
+          "✅ Supabase接続成功！ 分野マスタ " +
+          data.length +
+          "件を取得しました。";
+
+      } catch (error) {
+        status.textContent =
+          "❌ 接続処理エラー：" + error.message;
+      }
+    }
+
+    testConnection();
+  </script>
 </body>
 </html>
