@@ -4,38 +4,492 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>数学問題データベース</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family:
+        -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Noto Sans JP", sans-serif;
+      background: #f4f7f9;
+      color: #263238;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    /* ===== 上部ヘッダー ===== */
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      background: #176b70;
+      color: white;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.12);
+    }
+
+    .app-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .user-area {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+    }
+
+    .logout-button {
+      border: 1px solid rgba(255,255,255,0.7);
+      background: transparent;
+      color: white;
+      border-radius: 8px;
+      padding: 7px 12px;
+      cursor: pointer;
+    }
+
+    /* ===== 全体レイアウト ===== */
+
+    .app-layout {
+      display: flex;
+      min-height: calc(100vh - 64px);
+    }
+
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
+      background: white;
+      border-right: 1px solid #dde4e7;
+      padding: 18px 12px;
+    }
+
+    .nav-button {
+      width: 100%;
+      border: 0;
+      background: transparent;
+      text-align: left;
+      padding: 13px 14px;
+      margin-bottom: 5px;
+      border-radius: 9px;
+      cursor: pointer;
+      color: #455a64;
+      font-weight: 600;
+    }
+
+    .nav-button:hover {
+      background: #eef6f6;
+    }
+
+    .nav-button.active {
+      background: #dceeee;
+      color: #0f6065;
+    }
+
+    .main {
+      flex: 1;
+      min-width: 0;
+      padding: 28px;
+    }
+
+    .page {
+      display: none;
+    }
+
+    .page.active {
+      display: block;
+    }
+
+    .page-title {
+      margin: 0 0 22px;
+      font-size: 26px;
+    }
+
+    /* ===== カード ===== */
+
+    .card {
+      background: white;
+      border: 1px solid #e0e6e8;
+      border-radius: 14px;
+      padding: 20px;
+      margin-bottom: 18px;
+      box-shadow: 0 2px 7px rgba(0,0,0,0.035);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+
+    .primary-button {
+      border: 0;
+      border-radius: 9px;
+      background: #176b70;
+      color: white;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .secondary-button {
+      border: 1px solid #176b70;
+      border-radius: 9px;
+      background: white;
+      color: #176b70;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    /* ===== ホーム ===== */
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .quick-card {
+      background: white;
+      border: 1px solid #e0e6e8;
+      border-radius: 14px;
+      padding: 20px;
+      cursor: pointer;
+    }
+
+    .quick-card:hover {
+      border-color: #7db5b8;
+    }
+
+    .quick-card strong {
+      display: block;
+      margin-bottom: 6px;
+      color: #176b70;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .stat {
+      background: #f7fafb;
+      border-radius: 10px;
+      padding: 16px;
+    }
+
+    .stat-number {
+      display: block;
+      margin-top: 6px;
+      font-size: 26px;
+      font-weight: 700;
+      color: #176b70;
+    }
+
+    /* ===== ログイン ===== */
+
+    .login-screen {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .login-card {
+      width: 100%;
+      max-width: 420px;
+      background: white;
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 8px 28px rgba(0,0,0,0.10);
+    }
+
+    .login-card h1 {
+      margin-top: 0;
+      color: #176b70;
+    }
+
+    .login-card label {
+      display: block;
+      margin: 16px 0 6px;
+      font-weight: 600;
+    }
+
+    .login-card input {
+      width: 100%;
+      padding: 11px 12px;
+      border: 1px solid #cfd8dc;
+      border-radius: 8px;
+    }
+
+    .login-card .primary-button {
+      width: 100%;
+      margin-top: 20px;
+    }
+
+    .message {
+      margin-top: 16px;
+      font-size: 14px;
+    }
+
+    /* ===== スマホ ===== */
+
+    @media (max-width: 760px) {
+      .topbar {
+        height: 58px;
+        padding: 0 14px;
+      }
+
+      .app-title {
+        font-size: 16px;
+      }
+
+      .user-email {
+        display: none;
+      }
+
+      .app-layout {
+        display: block;
+        min-height: calc(100vh - 58px);
+      }
+
+      .sidebar {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 100;
+        width: auto;
+        height: 68px;
+        padding: 5px;
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        border-right: 0;
+        border-top: 1px solid #dbe2e5;
+      }
+
+      .nav-button {
+        padding: 7px 2px;
+        margin: 0;
+        text-align: center;
+        font-size: 11px;
+        border-radius: 7px;
+      }
+
+      .main {
+        padding: 18px 14px 88px;
+      }
+
+      .quick-actions,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .page-title {
+        font-size: 22px;
+      }
+    }
+  </style>
 </head>
 
 <body>
-  <h1>数学問題データベース</h1>
 
-  <h2>ログイン</h2>
+  <!-- ログイン前 -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <h1>数学問題データベース</h1>
+      <p>ログインしてください。</p>
 
-  <div id="login-area">
-    <p>
-      <label>
-        メールアドレス<br>
-        <input type="email" id="email">
-      </label>
-    </p>
+      <label for="email">メールアドレス</label>
+      <input id="email" type="email">
 
-    <p>
-      <label>
-        パスワード<br>
-        <input type="password" id="password">
-      </label>
-    </p>
+      <label for="password">パスワード</label>
+      <input id="password" type="password">
 
-    <button id="login-button">ログイン</button>
+      <button id="login-button" class="primary-button">
+        ログイン
+      </button>
+
+      <div id="login-message" class="message"></div>
+    </div>
   </div>
 
-  <div id="logged-in-area" style="display:none;">
-    <p id="user-info"></p>
-    <button id="logout-button">ログアウト</button>
+
+  <!-- ログイン後 -->
+  <div id="app" style="display:none;">
+
+    <header class="topbar">
+      <div class="app-title">数学問題データベース</div>
+
+      <div class="user-area">
+        <span id="user-email" class="user-email"></span>
+        <button id="logout-button" class="logout-button">
+          ログアウト
+        </button>
+      </div>
+    </header>
+
+
+    <div class="app-layout">
+
+      <nav class="sidebar">
+        <button class="nav-button active" data-page="home">
+          ホーム
+        </button>
+
+        <button class="nav-button" data-page="search">
+          問題検索
+        </button>
+
+        <button class="nav-button" data-page="analysis">
+          解答分析
+        </button>
+
+        <button class="nav-button" data-page="today">
+          今日の問題
+        </button>
+
+        <button class="nav-button" data-page="register">
+          問題登録
+        </button>
+      </nav>
+
+
+      <main class="main">
+
+        <!-- ホーム -->
+        <section id="page-home" class="page active">
+          <h1 class="page-title">ホーム</h1>
+
+          <div class="quick-actions">
+
+            <div class="quick-card" data-open-page="today">
+              <strong>今日の問題</strong>
+              条件に合わせて問題を選びます。
+            </div>
+
+            <div class="quick-card" data-open-page="search">
+              <strong>問題を探す</strong>
+              登録した問題を検索します。
+            </div>
+
+            <div class="quick-card" data-open-page="register">
+              <strong>問題を登録</strong>
+              新しい問題セットを登録します。
+            </div>
+
+          </div>
+
+          <div class="card" style="margin-top:18px;">
+            <h2>登録状況</h2>
+
+            <div class="stats">
+              <div class="stat">
+                登録問題
+                <span id="problem-count" class="stat-number">―</span>
+              </div>
+
+              <div class="stat">
+                演習済み
+                <span class="stat-number">―</span>
+              </div>
+
+              <div class="stat">
+                未演習
+                <span class="stat-number">―</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h2>最近使った問題</h2>
+            <p>まだ履歴はありません。</p>
+          </div>
+
+          <div class="card">
+            <h2>続きから</h2>
+            <p>進行中の演習や登録作業はありません。</p>
+          </div>
+        </section>
+
+
+        <!-- 問題検索 -->
+        <section id="page-search" class="page">
+          <h1 class="page-title">問題検索</h1>
+
+          <div class="card">
+            <h2>検索</h2>
+            <p>
+              条件検索・キーワード検索・類題検索を
+              ここに実装していきます。
+            </p>
+          </div>
+        </section>
+
+
+        <!-- 解答分析 -->
+        <section id="page-analysis" class="page">
+          <h1 class="page-title">解答分析</h1>
+
+          <div class="card">
+            <h2>教材研究・答案分析</h2>
+            <p>
+              意味段落、躓き、答案分析、指導メモを
+              ここに実装していきます。
+            </p>
+          </div>
+        </section>
+
+
+        <!-- 今日の問題 -->
+        <section id="page-today" class="page">
+          <h1 class="page-title">今日の問題</h1>
+
+          <div class="card">
+            <h2>問題を選ぶ</h2>
+            <p>
+              おすすめ・新規中心・復習中心・苦手重点などの
+              出題機能をここに実装していきます。
+            </p>
+          </div>
+        </section>
+
+
+        <!-- 問題登録 -->
+        <section id="page-register" class="page">
+          <h1 class="page-title">問題登録</h1>
+
+          <div class="card">
+            <h2>新しい問題を登録</h2>
+            <p>
+              ①問題セット → ②資料アップロード →
+              ③大問分割 → ④大問情報 → ⑤確認・登録
+            </p>
+
+            <button class="primary-button">
+              登録を開始
+            </button>
+          </div>
+        </section>
+
+      </main>
+    </div>
   </div>
 
-  <h2>Supabase 接続テスト</h2>
-  <p id="status">ログインしてください。</p>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
@@ -51,18 +505,84 @@
       SUPABASE_KEY
     );
 
-    const loginArea =
-      document.getElementById("login-area");
 
-    const loggedInArea =
-      document.getElementById("logged-in-area");
+    /* ===== 画面切替 ===== */
 
-    const status =
-      document.getElementById("status");
+    function showPage(pageName) {
 
-    const userInfo =
-      document.getElementById("user-info");
+      document
+        .querySelectorAll(".page")
+        .forEach(page => {
+          page.classList.remove("active");
+        });
 
+      document
+        .querySelectorAll(".nav-button")
+        .forEach(button => {
+          button.classList.remove("active");
+        });
+
+      document
+        .getElementById("page-" + pageName)
+        .classList.add("active");
+
+      const navButton =
+        document.querySelector(
+          '.nav-button[data-page="' + pageName + '"]'
+        );
+
+      if (navButton) {
+        navButton.classList.add("active");
+      }
+    }
+
+
+    document
+      .querySelectorAll(".nav-button")
+      .forEach(button => {
+
+        button.addEventListener("click", () => {
+          showPage(button.dataset.page);
+        });
+
+      });
+
+
+    document
+      .querySelectorAll("[data-open-page]")
+      .forEach(card => {
+
+        card.addEventListener("click", () => {
+          showPage(card.dataset.openPage);
+        });
+
+      });
+
+
+    /* ===== DB確認 ===== */
+
+    async function loadHomeData() {
+
+      const { count, error } = await client
+        .from("math_problems")
+        .select("*", {
+          count: "exact",
+          head: true
+        })
+        .is("deleted_at", null);
+
+      if (error) {
+        document.getElementById("problem-count")
+          .textContent = "!";
+        return;
+      }
+
+      document.getElementById("problem-count")
+        .textContent = count ?? 0;
+    }
+
+
+    /* ===== ログイン状態 ===== */
 
     async function updateScreen() {
 
@@ -70,52 +590,31 @@
         data: { session }
       } = await client.auth.getSession();
 
+      const loginScreen =
+        document.getElementById("login-screen");
+
+      const app =
+        document.getElementById("app");
+
       if (session) {
 
-        loginArea.style.display = "none";
-        loggedInArea.style.display = "block";
+        loginScreen.style.display = "none";
+        app.style.display = "block";
 
-        userInfo.textContent =
-          "ログイン中：" + session.user.email;
+        document.getElementById("user-email")
+          .textContent = session.user.email;
 
-        await testConnection();
+        await loadHomeData();
 
       } else {
 
-        loginArea.style.display = "block";
-        loggedInArea.style.display = "none";
-
-        status.textContent =
-          "ログインしてください。";
+        loginScreen.style.display = "flex";
+        app.style.display = "none";
       }
     }
 
 
-    async function testConnection() {
-
-      status.textContent =
-        "データベース確認中...";
-
-      const { data, error } = await client
-        .from("math_fields")
-        .select("name")
-        .order("sort_order");
-
-      if (error) {
-
-        status.textContent =
-          "❌ Supabase接続エラー：" +
-          error.message;
-
-        return;
-      }
-
-      status.textContent =
-        "✅ Supabase接続成功！ 分野マスタ " +
-        data.length +
-        "件を取得しました。";
-    }
-
+    /* ===== ログイン ===== */
 
     document
       .getElementById("login-button")
@@ -127,27 +626,30 @@
         const password =
           document.getElementById("password").value;
 
-        status.textContent =
-          "ログイン中...";
+        const message =
+          document.getElementById("login-message");
+
+        message.textContent = "ログイン中...";
 
         const { error } =
           await client.auth.signInWithPassword({
-            email: email,
-            password: password
+            email,
+            password
           });
 
         if (error) {
-
-          status.textContent =
-            "❌ ログインエラー：" +
-            error.message;
-
+          message.textContent =
+            "ログインエラー：" + error.message;
           return;
         }
+
+        message.textContent = "";
 
         await updateScreen();
       });
 
+
+    /* ===== ログアウト ===== */
 
     document
       .getElementById("logout-button")
@@ -158,6 +660,8 @@
         await updateScreen();
       });
 
+
+    /* ===== 起動 ===== */
 
     updateScreen();
 
