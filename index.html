@@ -1715,6 +1715,67 @@ problemSourceFileInput.addEventListener(
     problemSourceUploadButton.disabled = false;
   }
 );
+
+    /* ===== 問題登録：問題資料アップロード ===== */
+
+problemSourceUploadButton.addEventListener(
+  "click",
+  async () => {
+
+    if (!currentProblemSetId) {
+      alert(
+        "問題セットがまだ作成されていません。\n" +
+        "①問題セットから「次へ」で進んでください。"
+      );
+      return;
+    }
+
+    const files = Array.from(problemSourceFileInput.files);
+
+    if (files.length === 0) {
+      alert("アップロードするファイルを選択してください。");
+      return;
+    }
+
+    problemSourceUploadButton.disabled = true;
+    problemSourceUploadButton.textContent = "アップロード中...";
+
+    const file = files[0];
+
+    const storagePath =
+      currentProblemSetId + "/problem/" +
+      crypto.randomUUID() + "_" + file.name;
+
+    const { error: uploadError } =
+      await client.storage
+        .from("math-assets")
+        .upload(storagePath, file);
+
+    if (uploadError) {
+      console.error(
+        "問題資料アップロードエラー:",
+        uploadError
+      );
+
+      alert(
+        "問題資料をアップロードできませんでした。\n" +
+        uploadError.message
+      );
+
+      problemSourceUploadButton.disabled = false;
+      problemSourceUploadButton.textContent = "アップロード";
+      return;
+    }
+
+    alert(
+      "Storageへのアップロードに成功しました。\n" +
+      file.name
+    );
+
+    problemSourceUploadButton.disabled = false;
+    problemSourceUploadButton.textContent = "アップロード";
+  }
+);
     /* ===== 問題登録：問題セット下書き保存 ===== */
 
 const registerNextButton =
