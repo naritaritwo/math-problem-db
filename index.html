@@ -473,7 +473,7 @@
 <section id="page-register" class="page">
   <h1 class="page-title">問題登録</h1>
 
-  <div class="card">
+  <div id="register-step-1" class="card">
 
     <h2>① 問題セット</h2>
 
@@ -912,7 +912,40 @@
 
   </div>
 </section>
+<!-- ===== 問題登録 STEP 2：資料アップロード ===== -->
 
+<section
+  id="register-step-2"
+  style="display:none;"
+>
+
+  <h2>② 資料アップロード</h2>
+
+  <p>
+    問題・解答のスキャン画像を登録します。
+  </p>
+
+  <div class="card">
+
+    <h3>問題資料</h3>
+
+    <p>
+      問題冊子や問題用紙の画像をアップロードします。
+    </p>
+
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+
+    <h3>解答・解説資料</h3>
+
+    <p>
+      解答・解説の画像をアップロードします。
+    </p>
+
+  </div>
+
+</section>
       </main>
     </div>
   </div>
@@ -1895,6 +1928,12 @@ alert(
   "管理番号：" + data.set_code
 );
 
+/* STEP 1 → STEP 2 へ進む */
+document.getElementById("register-step-1").style.display = "none";
+document.getElementById("register-step-2").style.display = "block";
+
+window.scrollTo(0, 0);
+  
 }  // 大学入試 if を閉じる
 
 }  // async () => { を閉じる
