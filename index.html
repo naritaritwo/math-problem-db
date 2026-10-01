@@ -1740,11 +1740,35 @@ problemSourceUploadButton.addEventListener(
     problemSourceUploadButton.disabled = true;
     problemSourceUploadButton.textContent = "アップロード中...";
 
-    const file = files[0];
+const file = files[0];
 
-    const storagePath =
-      currentProblemSetId + "/problem/" +
-      crypto.randomUUID() + "_" + file.name;
+/* 現在ログイン中のユーザーを取得 */
+const {
+  data: { user },
+  error: userError
+} = await client.auth.getUser();
+
+if (userError || !user) {
+  console.error(
+    "ユーザー情報取得エラー:",
+    userError
+  );
+
+  alert(
+    "ログインユーザーを確認できませんでした。\n" +
+    "もう一度ログインしてください。"
+  );
+
+  problemSourceUploadButton.disabled = false;
+  problemSourceUploadButton.textContent = "アップロード";
+  return;
+}
+
+/* RLSに合わせてユーザーIDを先頭フォルダにする */
+const storagePath =
+  user.id + "/" +
+  currentProblemSetId + "/problem/" +
+  crypto.randomUUID() + "_" + file.name;
 
     const { error: uploadError } =
       await client.storage
