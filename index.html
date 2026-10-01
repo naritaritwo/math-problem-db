@@ -943,6 +943,38 @@
       解答・解説の画像をアップロードします。
     </p>
 
+    <div style="margin-top:16px;">
+
+  <label for="problem-source-file">
+    <strong>ファイルを選択</strong>
+  </label>
+
+  <div style="margin-top:8px;">
+    <input
+      type="file"
+      id="problem-source-file"
+      accept="image/*,.pdf"
+      multiple
+    >
+  </div>
+
+  <p
+    id="problem-source-file-info"
+    style="margin-top:8px; font-size:14px;"
+  >
+    ファイルはまだ選択されていません。
+  </p>
+
+  <button
+    type="button"
+    id="problem-source-upload-button"
+    class="primary-button"
+    disabled
+  >
+    アップロード
+  </button>
+
+</div>
   </div>
 
 </section>
@@ -1648,7 +1680,41 @@ saveDepartmentButton.addEventListener(
     }
 
     let currentProblemSetId = null;
-    
+
+    /* ===== 問題登録：問題資料ファイル選択 ===== */
+
+const problemSourceFileInput =
+  document.getElementById("problem-source-file");
+
+const problemSourceFileInfo =
+  document.getElementById("problem-source-file-info");
+
+const problemSourceUploadButton =
+  document.getElementById("problem-source-upload-button");
+
+problemSourceFileInput.addEventListener(
+  "change",
+  () => {
+
+    const files = Array.from(problemSourceFileInput.files);
+
+    if (files.length === 0) {
+      problemSourceFileInfo.textContent =
+        "ファイルはまだ選択されていません。";
+
+      problemSourceUploadButton.disabled = true;
+      return;
+    }
+
+    const fileNames =
+      files.map(file => file.name).join(" / ");
+
+    problemSourceFileInfo.textContent =
+      files.length + "件選択：" + fileNames;
+
+    problemSourceUploadButton.disabled = false;
+  }
+);
     /* ===== 問題登録：問題セット下書き保存 ===== */
 
 const registerNextButton =
