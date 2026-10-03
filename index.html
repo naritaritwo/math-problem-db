@@ -1035,6 +1035,23 @@
       登録した問題画像を確認し、大問の範囲を指定します。
     </p>
 
+　　<div style="margin-top:16px; margin-bottom:16px;">
+  <button
+    type="button"
+    id="add-major-problem-button"
+    class="primary-button"
+  >
+    ＋ 大問を追加
+  </button>
+
+  <div
+    id="major-problem-list"
+    style="margin-top:16px;"
+  >
+    <p>大問はまだ作成されていません。</p>
+  </div>
+</div>
+    
 <div id="problem-split-workspace">
   <p id="problem-split-status">
     問題資料を読み込みます。
@@ -1826,6 +1843,129 @@ resumeDraftButton.addEventListener(
 
     let currentProblemSetId = null;
 
+　　/* ===== 問題登録：大問一覧読み込み ===== */
+
+async function loadMajorProblems() {
+  const list =
+    document.getElementById("major-problem-list");
+
+  list.innerHTML =
+    "<p>大問を読み込んでいます...</p>";
+
+  const { data: problems, error } =
+    await client
+      .from("math_problems")
+      .select(`
+        id,
+        problem_code,
+        order_no,
+        original_label
+      `)
+      .eq("problem_set_id", currentProblemSetId)
+      .is("deleted_at", null)
+      .order("order_no", { ascending: true });
+
+  if (error) {
+    console.error(
+      "大問一覧取得エラー:",
+      error
+    );
+
+    list.innerHTML =
+      "<p>大問を読み込めませんでした。</p>";
+    return;
+  }
+
+  if (!problems || problems.length === 0) {
+    list.innerHTML =
+      "<p>大問はまだ作成されていません。</p>";
+    return;
+  }
+
+  list.innerHTML = "";
+
+  problems.forEach(problem => {
+    const item =
+      document.createElement("div");
+
+    item.style.marginBottom = "8px";
+
+    item.textContent =
+      problem.original_label ||
+      ("第" + problem.order_no + "問");
+
+    list.appendChild(item);
+  });
+}
+
+　　/* ===== 問題登録：大問追加 ===== */
+
+const addMajorProblemButton =
+  document.getElementById("add-major-problem-button");
+
+addMajorProblemButton.addEventListener(
+  "click",
+  async () => {
+    if (!currentProblemSetId) {
+      alert("問題セットが選択されていません。");
+      return;
+    }
+
+    addMajorProblemButton.disabled = true;
+
+    const { data: existingProblems, error: loadError } =
+      await client
+        .from("math_problems")
+        .select("order_no")
+        .eq("problem_set_id", currentProblemSetId)
+        .is("deleted_at", null)
+        .order("order_no", { ascending: false })
+        .limit(1);
+
+    if (loadError) {
+      console.error(
+        "大問番号取得エラー:",
+        loadError
+      );
+
+      alert("大問番号を確認できませんでした。");
+      addMajorProblemButton.disabled = false;
+      return;
+    }
+
+    const nextOrderNo =
+      existingProblems &&
+      existingProblems.length > 0
+        ? existingProblems[0].order_no + 1
+        : 1;
+
+    const { error: insertError } =
+      await client
+        .from("math_problems")
+        .insert({
+          problem_set_id: currentProblemSetId,
+          order_no: nextOrderNo,
+          original_label:
+            "第" + nextOrderNo + "問"
+        });
+
+    if (insertError) {
+      console.error(
+        "大問追加エラー:",
+        insertError
+      );
+
+      alert("大問を追加できませんでした。");
+      addMajorProblemButton.disabled = false;
+      return;
+    }
+
+    await loadMajorProblems();
+
+    addMajorProblemButton.disabled = false;
+  }
+);
+    
     /* ===== 問題登録：大問分割用の問題資料読み込み ===== */
 
 async function loadProblemSplitFiles() {
@@ -1956,9 +2096,10 @@ registerStep2NextButton.addEventListener(
     document.getElementById("register-step-3")
       .style.display = "block";
 
-    await loadProblemSplitFiles();
-    
-    window.scrollTo(0, 0);
+　　await loadProblemSplitFiles();
+　　await loadMajorProblems();
+
+　　window.scrollTo(0, 0);
   }
 );
     /* ===== 問題登録：問題資料ファイル選択 ===== */
