@@ -1035,9 +1035,14 @@
       登録した問題画像を確認し、大問の範囲を指定します。
     </p>
 
-    <div id="problem-split-workspace">
-      問題資料を読み込みます。
-    </div>
+<div id="problem-split-workspace">
+  <p id="problem-split-status">
+    問題資料を読み込みます。
+  </p>
+
+  <div id="problem-split-pages">
+  </div>
+</div>
   </div>
 </section>
         
@@ -1820,6 +1825,58 @@ resumeDraftButton.addEventListener(
     }
 
     let currentProblemSetId = null;
+
+    /* ===== 問題登録：大問分割用の問題資料読み込み ===== */
+
+async function loadProblemSplitFiles() {
+  const status =
+    document.getElementById("problem-split-status");
+
+  const pages =
+    document.getElementById("problem-split-pages");
+
+  status.textContent = "問題資料を読み込んでいます...";
+  pages.innerHTML = "";
+
+  const { data: files, error } =
+    await client
+      .from("math_source_files")
+      .select(`
+        id,
+        storage_path,
+        original_filename,
+        mime_type,
+        display_order
+      `)
+      .eq("problem_set_id", currentProblemSetId)
+      .eq("file_role", "problem")
+      .order("display_order", { ascending: true });
+
+  if (error) {
+    console.error(
+      "大問分割用資料取得エラー:",
+      error
+    );
+
+    status.textContent =
+      "問題資料を読み込めませんでした。";
+    return;
+  }
+
+  if (!files || files.length === 0) {
+    status.textContent =
+      "問題資料が登録されていません。";
+    return;
+  }
+
+  status.textContent =
+    files.length + "件の問題資料を読み込みました。";
+
+  console.log(
+    "大問分割用問題資料:",
+    files
+  );
+}
 　/* ===== 問題登録：STEP 2 → STEP 3 ===== */
 
 const registerStep2NextButton =
@@ -1827,7 +1884,7 @@ const registerStep2NextButton =
 
 registerStep2NextButton.addEventListener(
   "click",
-  () => {
+  async () => {
     if (!currentProblemSetId) {
       alert(
         "問題セットが作成されていません。\n" +
@@ -1842,6 +1899,8 @@ registerStep2NextButton.addEventListener(
     document.getElementById("register-step-3")
       .style.display = "block";
 
+    await loadProblemSplitFiles();
+    
     window.scrollTo(0, 0);
   }
 );
