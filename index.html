@@ -1842,6 +1842,7 @@ resumeDraftButton.addEventListener(
     }
 
     let currentProblemSetId = null;
+　　let currentProblemId = null;
 
 　　/* ===== 問題登録：大問一覧読み込み ===== */
 
@@ -1884,18 +1885,43 @@ async function loadMajorProblems() {
 
   list.innerHTML = "";
 
-  problems.forEach(problem => {
-    const item =
-      document.createElement("div");
+　if (
+  !currentProblemId ||
+  !problems.some(
+    problem => problem.id === currentProblemId
+  )
+) {
+  currentProblemId = problems[0].id;
+}
+  
+　problems.forEach(problem => {
+  const button =
+    document.createElement("button");
 
-    item.style.marginBottom = "8px";
+  button.type = "button";
 
-    item.textContent =
-      problem.original_label ||
-      ("第" + problem.order_no + "問");
+  button.textContent =
+    problem.original_label ||
+    ("第" + problem.order_no + "問");
 
-    list.appendChild(item);
-  });
+  button.style.marginRight = "8px";
+  button.style.marginBottom = "8px";
+
+  if (problem.id === currentProblemId) {
+    button.className = "primary-button";
+  }
+
+  button.addEventListener(
+    "click",
+    async () => {
+      currentProblemId = problem.id;
+
+      await loadMajorProblems();
+    }
+  );
+
+  list.appendChild(button);
+});
 }
 
 　　/* ===== 問題登録：大問追加 ===== */
