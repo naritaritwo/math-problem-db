@@ -421,8 +421,11 @@
           </div>
 
           <div class="card">
-            <h2>続きから</h2>
-            <p>進行中の演習や登録作業はありません。</p>
+　　<h2>続きから</h2>
+
+　　<div id="resume-draft-area">
+ 　　 <p>進行中の登録作業はありません。</p>
+　　</div>
           </div>
         </section>
 
@@ -1737,6 +1740,50 @@ saveDepartmentButton.addEventListener(
 
       document.getElementById("problem-count")
         .textContent = count ?? 0;
+      
+      /* 最新の問題登録下書きを取得 */
+const { data: draftData, error: draftError } =
+  await client
+    .from("math_problem_sets")
+    .select(`
+      id,
+      set_code,
+      year,
+      source_type,
+      created_at
+    `)
+    .eq("status", "draft")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+const resumeDraftArea =
+  document.getElementById("resume-draft-area");
+
+if (draftError) {
+  console.error(
+    "下書き取得エラー:",
+    draftError
+  );
+
+  resumeDraftArea.innerHTML =
+    "<p>下書きを読み込めませんでした。</p>";
+
+} else if (!draftData) {
+  resumeDraftArea.innerHTML =
+    "<p>進行中の登録作業はありません。</p>";
+
+} else {
+  resumeDraftArea.innerHTML =
+    "<p><strong>" +
+    draftData.set_code +
+    "</strong>｜" +
+    draftData.year +
+    "年度｜" +
+    draftData.source_type +
+    "</p>";
+}
     }
 
     let currentProblemSetId = null;
