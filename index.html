@@ -1050,6 +1050,22 @@
   >
     <p>大問はまだ作成されていません。</p>
   </div>
+
+    <button
+  type="button"
+  id="save-problem-region-button"
+  class="primary-button"
+  disabled
+>
+  この範囲を追加
+</button>
+
+<p
+  id="problem-region-status"
+  style="margin-top:8px;"
+>
+  問題画像上で範囲をドラッグしてください。
+</p>
 </div>
     
 <div id="problem-split-workspace">
@@ -1843,6 +1859,7 @@ resumeDraftButton.addEventListener(
 
     let currentProblemSetId = null;
 　　let currentProblemId = null;
+　　let pendingProblemRegion = null;
 
 　　/* ===== 問題登録：大問一覧読み込み ===== */
 
@@ -2239,6 +2256,30 @@ imageWrapper.addEventListener(
     boxRect.height /
     wrapperRect.height;
 
+pendingProblemRegion = {
+  problemId: currentProblemId,
+  sourceFileId: file.id,
+  pageNumber: 1,
+  cropX,
+  cropY,
+  cropWidth,
+  cropHeight
+};
+
+  const saveRegionButton =
+  document.getElementById(
+    "save-problem-region-button"
+  );
+
+const regionStatus =
+  document.getElementById(
+    "problem-region-status"
+  );
+
+saveRegionButton.disabled = false;
+
+regionStatus.textContent =
+  "範囲を選択しました。「この範囲を追加」で保存できます。";
   console.log(
     "大問範囲:",
     {
@@ -2271,6 +2312,67 @@ pageContainer.appendChild(imageWrapper);
   pages.appendChild(pageContainer);
 }
 }
+
+/* ===== 問題登録：大問範囲保存 ===== */
+
+const saveProblemRegionButton =
+  document.getElementById(
+    "save-problem-region-button"
+  );
+
+saveProblemRegionButton.addEventListener(
+  "click",
+  async () => {
+    if (!pendingProblemRegion) {
+      alert("保存する範囲を選択してください。");
+      return;
+    }
+
+    saveProblemRegionButton.disabled = true;
+
+    const { error } =
+      await client
+        .from("math_problem_regions")
+        .insert({
+          problem_id:
+            pendingProblemRegion.problemId,
+          source_file_id:
+            pendingProblemRegion.sourceFileId,
+          page_number:
+            pendingProblemRegion.pageNumber,
+          crop_x:
+            pendingProblemRegion.cropX,
+          crop_y:
+            pendingProblemRegion.cropY,
+          crop_width:
+            pendingProblemRegion.cropWidth,
+          crop_height:
+            pendingProblemRegion.cropHeight,
+          display_order: 0
+        });
+
+    if (error) {
+      console.error(
+        "大問範囲保存エラー:",
+        error
+      );
+
+      alert("範囲を保存できませんでした。");
+      saveProblemRegionButton.disabled = false;
+      return;
+    }
+
+    pendingProblemRegion = null;
+
+    document.getElementById(
+      "problem-region-status"
+    ).textContent =
+      "範囲を追加しました。続けて別の範囲も選択できます。";
+
+    alert("範囲を追加しました。");
+  }
+);
+    
 　/* ===== 問題登録：STEP 2 → STEP 3 ===== */
 
 const registerStep2NextButton =
