@@ -1791,8 +1791,37 @@ const storagePath =
       return;
     }
 
+    /* Storage上のファイル情報をDBへ登録 */
+const { error: sourceFileError } =
+  await client
+    .from("math_source_files")
+    .insert({
+      problem_set_id: currentProblemSetId,
+      file_role: "problem",
+      storage_path: storagePath,
+      original_filename: file.name,
+      mime_type: file.type || null,
+      file_size_bytes: file.size
+    });
+
+if (sourceFileError) {
+  console.error(
+    "問題資料DB登録エラー:",
+    sourceFileError
+  );
+
+  alert(
+    "ファイルはStorageに保存されましたが、\n" +
+    "データベースへの登録に失敗しました。\n" +
+    sourceFileError.message
+  );
+
+  problemSourceUploadButton.disabled = false;
+  problemSourceUploadButton.textContent = "アップロード";
+  return;
+}
     alert(
-      "Storageへのアップロードに成功しました。\n" +
+      "問題資料を登録しました。\n" +
       file.name
     );
 
