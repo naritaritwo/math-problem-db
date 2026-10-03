@@ -933,6 +933,36 @@
       問題冊子や問題用紙の画像をアップロードします。
     </p>
 
+    <div style="margin-top:16px;">
+  <label for="problem-source-file">
+    <strong>ファイルを選択</strong>
+  </label>
+
+  <div style="margin-top:8px;">
+    <input
+      type="file"
+      id="problem-source-file"
+      accept="image/*,.pdf"
+      multiple
+    >
+  </div>
+
+  <p
+    id="problem-source-file-info"
+    style="margin-top:8px; font-size:14px;"
+  >
+    ファイルはまだ選択されていません。
+  </p>
+
+  <button
+    type="button"
+    id="problem-source-upload-button"
+    class="primary-button"
+    disabled
+  >
+    アップロード
+  </button>
+</div>
   </div>
 
   <div class="card" style="margin-top:16px;">
