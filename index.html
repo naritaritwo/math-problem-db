@@ -2084,18 +2084,152 @@ for (let i = 0; i < files.length; i++) {
   pageTitle.textContent =
     "ページ " + (i + 1);
 
-  const image =
-    document.createElement("img");
+  const imageWrapper =
+  document.createElement("div");
 
-  image.src = signedData.signedUrl;
-  image.alt = file.original_filename;
+imageWrapper.className =
+  "problem-image-wrapper";
 
-  image.style.display = "block";
-  image.style.maxWidth = "100%";
-  image.style.height = "auto";
+imageWrapper.style.position = "relative";
+imageWrapper.style.display = "inline-block";
+imageWrapper.style.maxWidth = "100%";
 
-  pageContainer.appendChild(pageTitle);
-  pageContainer.appendChild(image);
+const image =
+  document.createElement("img");
+
+image.src = signedData.signedUrl;
+image.alt = file.original_filename;
+
+image.style.display = "block";
+image.style.maxWidth = "100%";
+image.style.height = "auto";
+
+imageWrapper.appendChild(image);
+/* ===== 大問範囲のドラッグ選択 ===== */
+
+imageWrapper.style.cursor = "crosshair";
+imageWrapper.style.userSelect = "none";
+
+let selectionBox = null;
+let startX = 0;
+let startY = 0;
+let isSelecting = false;
+
+imageWrapper.addEventListener(
+  "pointerdown",
+  event => {
+    if (!currentProblemId) {
+      alert("先に大問を選択してください。");
+      return;
+    }
+
+    event.preventDefault();
+
+    const rect =
+      imageWrapper.getBoundingClientRect();
+
+    startX = event.clientX - rect.left;
+    startY = event.clientY - rect.top;
+
+    isSelecting = true;
+
+    if (selectionBox) {
+      selectionBox.remove();
+    }
+
+    selectionBox =
+      document.createElement("div");
+
+    selectionBox.style.position = "absolute";
+    selectionBox.style.left = startX + "px";
+    selectionBox.style.top = startY + "px";
+    selectionBox.style.width = "0px";
+    selectionBox.style.height = "0px";
+    selectionBox.style.border =
+      "2px solid #00897b";
+    selectionBox.style.background =
+      "rgba(0, 137, 123, 0.15)";
+    selectionBox.style.pointerEvents = "none";
+    selectionBox.style.boxSizing = "border-box";
+
+    imageWrapper.appendChild(selectionBox);
+
+    imageWrapper.setPointerCapture(
+      event.pointerId
+    );
+  }
+);
+
+imageWrapper.addEventListener(
+  "pointermove",
+  event => {
+    if (!isSelecting || !selectionBox) {
+      return;
+    }
+
+    const rect =
+      imageWrapper.getBoundingClientRect();
+
+    const currentX =
+      Math.max(
+        0,
+        Math.min(
+          event.clientX - rect.left,
+          rect.width
+        )
+      );
+
+    const currentY =
+      Math.max(
+        0,
+        Math.min(
+          event.clientY - rect.top,
+          rect.height
+        )
+      );
+
+    const left =
+      Math.min(startX, currentX);
+
+    const top =
+      Math.min(startY, currentY);
+
+    const width =
+      Math.abs(currentX - startX);
+
+    const height =
+      Math.abs(currentY - startY);
+
+    selectionBox.style.left = left + "px";
+    selectionBox.style.top = top + "px";
+    selectionBox.style.width = width + "px";
+    selectionBox.style.height = height + "px";
+  }
+);
+
+imageWrapper.addEventListener(
+  "pointerup",
+  event => {
+    if (!isSelecting) {
+      return;
+    }
+
+    isSelecting = false;
+
+    if (
+      imageWrapper.hasPointerCapture(
+        event.pointerId
+      )
+    ) {
+      imageWrapper.releasePointerCapture(
+        event.pointerId
+      );
+    }
+  }
+);
+
+pageContainer.appendChild(pageTitle);
+pageContainer.appendChild(imageWrapper);
 
   pages.appendChild(pageContainer);
 }
