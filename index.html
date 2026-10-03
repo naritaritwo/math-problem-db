@@ -1834,7 +1834,10 @@ for (let i = 0; i < files.length; i++) {
   const storagePath =
     user.id + "/" +
     currentProblemSetId + "/problem/" +
-    crypto.randomUUID() + "_" + file.name;
+ crypto.randomUUID() +
+(file.name.includes(".")
+  ? "." + file.name.split(".").pop().toLowerCase()
+  : "");
 
   const { error: uploadError } =
     await client.storage
@@ -1961,8 +1964,10 @@ solutionSourceUploadButton.addEventListener(
       const storagePath =
         user.id + "/" +
         currentProblemSetId + "/solution/" +
-        crypto.randomUUID() + "_" + file.name;
-
+        crypto.randomUUID() +
+　　　　(file.name.includes(".")
+  　　　? "." + file.name.split(".").pop().toLowerCase()
+  　　　: "");
       const { error: uploadError } =
         await client.storage
           .from("math-assets")
