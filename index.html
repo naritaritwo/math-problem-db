@@ -943,23 +943,22 @@
       解答・解説の画像をアップロードします。
     </p>
 
-    <div style="margin-top:16px;">
-
-  <label for="problem-source-file">
+<div style="margin-top:16px;">
+  <label for="solution-source-file">
     <strong>ファイルを選択</strong>
   </label>
 
   <div style="margin-top:8px;">
     <input
       type="file"
-      id="problem-source-file"
+      id="solution-source-file"
       accept="image/*,.pdf"
       multiple
     >
   </div>
 
   <p
-    id="problem-source-file-info"
+    id="solution-source-file-info"
     style="margin-top:8px; font-size:14px;"
   >
     ファイルはまだ選択されていません。
@@ -967,13 +966,12 @@
 
   <button
     type="button"
-    id="problem-source-upload-button"
+    id="solution-source-upload-button"
     class="primary-button"
     disabled
   >
     アップロード
   </button>
-
 </div>
   </div>
 
@@ -1716,6 +1714,40 @@ problemSourceFileInput.addEventListener(
   }
 );
 
+  /* ===== 問題登録：解答・解説資料ファイル選択 ===== */
+
+const solutionSourceFileInput =
+  document.getElementById("solution-source-file");
+
+const solutionSourceFileInfo =
+  document.getElementById("solution-source-file-info");
+
+const solutionSourceUploadButton =
+  document.getElementById("solution-source-upload-button");
+
+solutionSourceFileInput.addEventListener(
+  "change",
+  () => {
+
+    const files = Array.from(solutionSourceFileInput.files);
+
+    if (files.length === 0) {
+      solutionSourceFileInfo.textContent =
+        "ファイルはまだ選択されていません。";
+
+      solutionSourceUploadButton.disabled = true;
+      return;
+    }
+
+    const fileNames =
+      files.map(file => file.name).join(" / ");
+
+    solutionSourceFileInfo.textContent =
+      files.length + "件選択：" + fileNames;
+
+    solutionSourceUploadButton.disabled = false;
+  }
+); 
     /* ===== 問題登録：問題資料アップロード ===== */
 
 problemSourceUploadButton.addEventListener(
@@ -1838,6 +1870,139 @@ problemSourceFileInfo.textContent =
 
 problemSourceUploadButton.disabled = true;
 problemSourceUploadButton.textContent = "アップロード";
+  }
+);
+
+    /* ===== 問題登録：解答・解説資料アップロード ===== */
+
+solutionSourceUploadButton.addEventListener(
+  "click",
+  async () => {
+
+    if (!currentProblemSetId) {
+      alert(
+        "問題セットがまだ作成されていません。\n" +
+        "①問題セットから「次へ」で進んでください。"
+      );
+      return;
+    }
+
+    const files =
+      Array.from(solutionSourceFileInput.files);
+
+    if (files.length === 0) {
+      alert(
+        "アップロードするファイルを選択してください。"
+      );
+      return;
+    }
+
+    solutionSourceUploadButton.disabled = true;
+    solutionSourceUploadButton.textContent =
+      "アップロード中...";
+
+    /* 現在ログイン中のユーザーを取得 */
+    const {
+      data: { user },
+      error: userError
+    } = await client.auth.getUser();
+
+    if (userError || !user) {
+      console.error(
+        "ユーザー情報取得エラー:",
+        userError
+      );
+
+      alert(
+        "ログインユーザーを確認できませんでした。\n" +
+        "もう一度ログインしてください。"
+      );
+
+      solutionSourceUploadButton.disabled = false;
+      solutionSourceUploadButton.textContent =
+        "アップロード";
+      return;
+    }
+
+    /* 選択された解答・解説資料を順番に登録 */
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+
+      const storagePath =
+        user.id + "/" +
+        currentProblemSetId + "/solution/" +
+        crypto.randomUUID() + "_" + file.name;
+
+      const { error: uploadError } =
+        await client.storage
+          .from("math-assets")
+          .upload(storagePath, file);
+
+      if (uploadError) {
+        console.error(
+          "解答・解説資料アップロードエラー:",
+          uploadError
+        );
+
+        alert(
+          (i + 1) +
+          "件目のファイルをアップロードできませんでした。\n" +
+          file.name + "\n" +
+          uploadError.message
+        );
+
+        solutionSourceUploadButton.disabled = false;
+        solutionSourceUploadButton.textContent =
+          "アップロード";
+        return;
+      }
+
+      /* Storage上のファイル情報をDBへ登録 */
+      const { error: sourceFileError } =
+        await client
+          .from("math_source_files")
+          .insert({
+            problem_set_id: currentProblemSetId,
+            file_role: "solution",
+            storage_path: storagePath,
+            original_filename: file.name,
+            mime_type: file.type || null,
+            file_size_bytes: file.size,
+            display_order: i
+          });
+
+      if (sourceFileError) {
+        console.error(
+          "解答・解説資料DB登録エラー:",
+          sourceFileError
+        );
+
+        alert(
+          file.name +
+          " はStorageに保存されましたが、\n" +
+          "データベースへの登録に失敗しました。\n" +
+          sourceFileError.message
+        );
+
+        solutionSourceUploadButton.disabled = false;
+        solutionSourceUploadButton.textContent =
+          "アップロード";
+        return;
+      }
+    }
+
+    alert(
+      files.length +
+      "件の解答・解説資料を登録しました。"
+    );
+
+    solutionSourceFileInput.value = "";
+    solutionSourceFileInfo.textContent =
+      "ファイルはまだ選択されていません。";
+
+    solutionSourceUploadButton.disabled = true;
+    solutionSourceUploadButton.textContent =
+      "アップロード";
   }
 );
     /* ===== 問題登録：問題セット下書き保存 ===== */
