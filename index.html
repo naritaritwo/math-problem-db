@@ -1740,7 +1740,7 @@ problemSourceUploadButton.addEventListener(
     problemSourceUploadButton.disabled = true;
     problemSourceUploadButton.textContent = "アップロード中...";
 
-const file = files[0];
+
 
 /* 現在ログイン中のユーザーを取得 */
 const {
@@ -1764,69 +1764,80 @@ if (userError || !user) {
   return;
 }
 
-/* RLSに合わせてユーザーIDを先頭フォルダにする */
-const storagePath =
-  user.id + "/" +
-  currentProblemSetId + "/problem/" +
-  crypto.randomUUID() + "_" + file.name;
+/* 選択された問題資料を順番に登録 */
+for (let i = 0; i < files.length; i++) {
+  const file = files[i];
 
-    const { error: uploadError } =
-      await client.storage
-        .from("math-assets")
-        .upload(storagePath, file);
+  /* RLSに合わせてユーザーIDを先頭フォルダにする */
+  const storagePath =
+    user.id + "/" +
+    currentProblemSetId + "/problem/" +
+    crypto.randomUUID() + "_" + file.name;
 
-    if (uploadError) {
-      console.error(
-        "問題資料アップロードエラー:",
-        uploadError
-      );
+  const { error: uploadError } =
+    await client.storage
+      .from("math-assets")
+      .upload(storagePath, file);
 
-      alert(
-        "問題資料をアップロードできませんでした。\n" +
-        uploadError.message
-      );
+  if (uploadError) {
+    console.error(
+      "問題資料アップロードエラー:",
+      uploadError
+    );
 
-      problemSourceUploadButton.disabled = false;
-      problemSourceUploadButton.textContent = "アップロード";
-      return;
-    }
-
-    /* Storage上のファイル情報をDBへ登録 */
-const { error: sourceFileError } =
-  await client
-    .from("math_source_files")
-    .insert({
-      problem_set_id: currentProblemSetId,
-      file_role: "problem",
-      storage_path: storagePath,
-      original_filename: file.name,
-      mime_type: file.type || null,
-      file_size_bytes: file.size
-    });
-
-if (sourceFileError) {
-  console.error(
-    "問題資料DB登録エラー:",
-    sourceFileError
-  );
-
-  alert(
-    "ファイルはStorageに保存されましたが、\n" +
-    "データベースへの登録に失敗しました。\n" +
-    sourceFileError.message
-  );
-
-  problemSourceUploadButton.disabled = false;
-  problemSourceUploadButton.textContent = "アップロード";
-  return;
-}
     alert(
-      "問題資料を登録しました。\n" +
-      file.name
+      (i + 1) + "件目のファイルをアップロードできませんでした。\n" +
+      file.name + "\n" +
+      uploadError.message
     );
 
     problemSourceUploadButton.disabled = false;
     problemSourceUploadButton.textContent = "アップロード";
+    return;
+  }
+
+  /* Storage上のファイル情報をDBへ登録 */
+  const { error: sourceFileError } =
+    await client
+      .from("math_source_files")
+      .insert({
+        problem_set_id: currentProblemSetId,
+        file_role: "problem",
+        storage_path: storagePath,
+        original_filename: file.name,
+        mime_type: file.type || null,
+        file_size_bytes: file.size,
+        display_order: i
+      });
+
+  if (sourceFileError) {
+    console.error(
+      "問題資料DB登録エラー:",
+      sourceFileError
+    );
+
+    alert(
+      file.name + " はStorageに保存されましたが、\n" +
+      "データベースへの登録に失敗しました。\n" +
+      sourceFileError.message
+    );
+
+    problemSourceUploadButton.disabled = false;
+    problemSourceUploadButton.textContent = "アップロード";
+    return;
+  }
+}
+
+alert(
+  files.length + "件の問題資料を登録しました。"
+);
+
+problemSourceFileInput.value = "";
+problemSourceFileInfo.textContent =
+  "ファイルはまだ選択されていません。";
+
+problemSourceUploadButton.disabled = true;
+problemSourceUploadButton.textContent = "アップロード";
   }
 );
     /* ===== 問題登録：問題セット下書き保存 ===== */
