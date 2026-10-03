@@ -1876,6 +1876,63 @@ async function loadProblemSplitFiles() {
     "大問分割用問題資料:",
     files
   );
+  /* private Storage の問題画像を順番に表示 */
+for (let i = 0; i < files.length; i++) {
+  const file = files[i];
+
+  const { data: signedData, error: signedError } =
+    await client.storage
+      .from("math-assets")
+      .createSignedUrl(
+        file.storage_path,
+        60 * 60
+      );
+
+  if (signedError || !signedData) {
+    console.error(
+      "署名付きURL作成エラー:",
+      signedError
+    );
+
+    const errorMessage =
+      document.createElement("p");
+
+    errorMessage.textContent =
+      "資料" + (i + 1) + "を表示できませんでした。";
+
+    pages.appendChild(errorMessage);
+    continue;
+  }
+
+  const pageContainer =
+    document.createElement("div");
+
+  pageContainer.className =
+    "problem-split-page";
+
+  pageContainer.style.marginTop = "24px";
+
+  const pageTitle =
+    document.createElement("h4");
+
+  pageTitle.textContent =
+    "ページ " + (i + 1);
+
+  const image =
+    document.createElement("img");
+
+  image.src = signedData.signedUrl;
+  image.alt = file.original_filename;
+
+  image.style.display = "block";
+  image.style.maxWidth = "100%";
+  image.style.height = "auto";
+
+  pageContainer.appendChild(pageTitle);
+  pageContainer.appendChild(image);
+
+  pages.appendChild(pageContainer);
+}
 }
 　/* ===== 問題登録：STEP 2 → STEP 3 ===== */
 
