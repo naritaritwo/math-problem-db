@@ -1776,13 +1776,46 @@ if (draftError) {
 
 } else {
   resumeDraftArea.innerHTML =
-    "<p><strong>" +
-    draftData.set_code +
-    "</strong>｜" +
-    draftData.year +
-    "年度｜" +
-    draftData.source_type +
-    "</p>";
+  "<p><strong>" +
+  draftData.set_code +
+  "</strong>｜" +
+  draftData.year +
+  "年度｜" +
+  draftData.source_type +
+  "</p>" +
+  '<button type="button" ' +
+  'id="resume-draft-button" ' +
+  'class="primary-button">' +
+  "登録を再開" +
+  "</button>";
+const resumeDraftButton =
+  document.getElementById("resume-draft-button");
+
+resumeDraftButton.addEventListener(
+  "click",
+  () => {
+    currentProblemSetId = draftData.id;
+
+    document.querySelectorAll(".page")
+      .forEach(page => {
+        page.classList.remove("active");
+      });
+
+    document.getElementById("page-register")
+      .classList.add("active");
+
+    document.getElementById("register-step-1")
+      .style.display = "none";
+
+    document.getElementById("register-step-2")
+      .style.display = "block";
+
+    document.getElementById("register-step-3")
+      .style.display = "none";
+
+    window.scrollTo(0, 0);
+  }
+);
 }
     }
 
