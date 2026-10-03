@@ -2216,6 +2216,43 @@ imageWrapper.addEventListener(
 
     isSelecting = false;
 
+　　if (selectionBox) {
+  const wrapperRect =
+    imageWrapper.getBoundingClientRect();
+
+  const boxRect =
+    selectionBox.getBoundingClientRect();
+
+  const cropX =
+    (boxRect.left - wrapperRect.left) /
+    wrapperRect.width;
+
+  const cropY =
+    (boxRect.top - wrapperRect.top) /
+    wrapperRect.height;
+
+  const cropWidth =
+    boxRect.width /
+    wrapperRect.width;
+
+  const cropHeight =
+    boxRect.height /
+    wrapperRect.height;
+
+  console.log(
+    "大問範囲:",
+    {
+      problemId: currentProblemId,
+      sourceFileId: file.id,
+      pageNumber: 1,
+      cropX,
+      cropY,
+      cropWidth,
+      cropHeight
+    }
+  );
+}
+  
     if (
       imageWrapper.hasPointerCapture(
         event.pointerId
