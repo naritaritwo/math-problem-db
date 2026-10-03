@@ -2203,7 +2203,8 @@ fileRegions.forEach(region => {
   savedBox.style.background =
     "rgba(0, 137, 123, 0.10)";
 
-  savedBox.style.pointerEvents = "none";
+  savedBox.style.pointerEvents = "auto";
+　savedBox.style.cursor = "pointer";
   savedBox.style.boxSizing = "border-box";
 
   const label =
@@ -2221,6 +2222,46 @@ fileRegions.forEach(region => {
   label.style.color = "white";
   label.style.fontSize = "12px";
 
+  savedBox.addEventListener(
+  "click",
+  async event => {
+    event.stopPropagation();
+
+    const problemLabel =
+      region.math_problems?.original_label ||
+      "大問";
+
+    const confirmed =
+      confirm(
+        problemLabel +
+        "のこの範囲を削除しますか？"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const { error: deleteError } =
+  await client
+    .from("math_problem_regions")
+    .delete()
+    .eq("id", region.id);
+
+if (deleteError) {
+  console.error(
+    "大問範囲削除エラー:",
+    deleteError
+  );
+
+  alert("範囲を削除できませんでした。");
+  return;
+}
+
+savedBox.remove();
+
+alert("範囲を削除しました。");
+  }
+);
   savedBox.appendChild(label);
   imageWrapper.appendChild(savedBox);
 });
