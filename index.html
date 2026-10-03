@@ -2222,6 +2222,13 @@ fileRegions.forEach(region => {
   label.style.color = "white";
   label.style.fontSize = "12px";
 
+　savedBox.addEventListener(
+  "pointerdown",
+  event => {
+    event.stopPropagation();
+  }
+);
+  
   savedBox.addEventListener(
   "click",
   async event => {
