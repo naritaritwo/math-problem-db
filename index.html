@@ -2431,6 +2431,29 @@ saveProblemRegionButton.addEventListener(
 
     saveProblemRegionButton.disabled = true;
 
+　　const { count: existingRegionCount, error: countError } =
+  await client
+    .from("math_problem_regions")
+    .select("id", {
+      count: "exact",
+      head: true
+    })
+    .eq(
+      "problem_id",
+      pendingProblemRegion.problemId
+    );
+
+if (countError) {
+  console.error(
+    "大問範囲数取得エラー:",
+    countError
+  );
+
+  alert("既存の範囲を確認できませんでした。");
+  saveProblemRegionButton.disabled = false;
+  return;
+}
+  
     const { error } =
       await client
         .from("math_problem_regions")
@@ -2449,7 +2472,7 @@ saveProblemRegionButton.addEventListener(
             pendingProblemRegion.cropWidth,
           crop_height:
             pendingProblemRegion.cropHeight,
-          display_order: 0
+          display_order: existingRegionCount
         });
 
     if (error) {
