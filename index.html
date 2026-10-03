@@ -1005,7 +1005,39 @@
 </div>
   </div>
 
+  <div style="margin-top:24px;">
+  <button
+    type="button"
+    id="register-step-2-next-button"
+    class="primary-button"
+  >
+    ③ 大問分割へ
+  </button>
+</div>
+  
 </section>
+
+　　<!-- ===== 問題登録 STEP 3：大問分割 ===== -->
+<section id="register-step-3" style="display:none;">
+  <h2>③ 大問分割</h2>
+
+  <p>
+    アップロードした問題資料を大問ごとに分割します。
+  </p>
+
+  <div class="card">
+    <h3>問題資料</h3>
+
+    <p>
+      登録した問題画像を確認し、大問の範囲を指定します。
+    </p>
+
+    <div id="problem-split-workspace">
+      問題資料を読み込みます。
+    </div>
+  </div>
+</section>
+        
       </main>
     </div>
   </div>
@@ -1708,7 +1740,31 @@ saveDepartmentButton.addEventListener(
     }
 
     let currentProblemSetId = null;
+　/* ===== 問題登録：STEP 2 → STEP 3 ===== */
 
+const registerStep2NextButton =
+  document.getElementById("register-step-2-next-button");
+
+registerStep2NextButton.addEventListener(
+  "click",
+  () => {
+    if (!currentProblemSetId) {
+      alert(
+        "問題セットが作成されていません。\n" +
+        "①問題セットから登録をやり直してください。"
+      );
+      return;
+    }
+
+    document.getElementById("register-step-2")
+      .style.display = "none";
+
+    document.getElementById("register-step-3")
+      .style.display = "block";
+
+    window.scrollTo(0, 0);
+  }
+);
     /* ===== 問題登録：問題資料ファイル選択 ===== */
 
 const problemSourceFileInput =
