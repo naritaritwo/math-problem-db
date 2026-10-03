@@ -2052,6 +2052,51 @@ async function loadProblemSplitFiles() {
     return;
   }
 
+　/* 保存済みの大問範囲を読み込む */
+
+const { data: savedRegions, error: regionError } =
+  await client
+    .from("math_problem_regions")
+    .select(`
+      id,
+      problem_id,
+      source_file_id,
+      page_number,
+      crop_x,
+      crop_y,
+      crop_width,
+      crop_height,
+      display_order,
+      math_problems!inner (
+        problem_set_id,
+        order_no,
+        original_label
+      )
+    `)
+    .eq(
+      "math_problems.problem_set_id",
+      currentProblemSetId
+    )
+    .order("display_order", {
+      ascending: true
+    });
+
+if (regionError) {
+  console.error(
+    "保存済み大問範囲取得エラー:",
+    regionError
+  );
+
+  status.textContent =
+    "保存済みの大問範囲を読み込めませんでした。";
+  return;
+}
+
+console.log(
+  "保存済み大問範囲:",
+  savedRegions
+);
+  
   status.textContent =
     files.length + "件の問題資料を読み込みました。";
 
@@ -2122,6 +2167,62 @@ image.style.maxWidth = "100%";
 image.style.height = "auto";
 
 imageWrapper.appendChild(image);
+
+/* ===== 保存済み大問範囲の表示 ===== */
+
+const fileRegions =
+  (savedRegions || []).filter(
+    region =>
+      region.source_file_id === file.id &&
+      region.page_number === 1
+  );
+
+fileRegions.forEach(region => {
+  const savedBox =
+    document.createElement("div");
+
+  savedBox.style.position = "absolute";
+
+  savedBox.style.left =
+    (Number(region.crop_x) * 100) + "%";
+
+  savedBox.style.top =
+    (Number(region.crop_y) * 100) + "%";
+
+  savedBox.style.width =
+    (Number(region.crop_width) * 100) + "%";
+
+  savedBox.style.height =
+    (Number(region.crop_height) * 100) + "%";
+
+  savedBox.style.border =
+    "2px solid #00897b";
+
+  savedBox.style.background =
+    "rgba(0, 137, 123, 0.10)";
+
+  savedBox.style.pointerEvents = "none";
+  savedBox.style.boxSizing = "border-box";
+
+  const label =
+    document.createElement("span");
+
+  label.textContent =
+    region.math_problems?.original_label ||
+    "大問";
+
+  label.style.position = "absolute";
+  label.style.left = "0";
+  label.style.top = "0";
+  label.style.padding = "2px 6px";
+  label.style.background = "#00897b";
+  label.style.color = "white";
+  label.style.fontSize = "12px";
+
+  savedBox.appendChild(label);
+  imageWrapper.appendChild(savedBox);
+});
+  
 /* ===== 大問範囲のドラッグ選択 ===== */
 
 imageWrapper.style.cursor = "crosshair";
