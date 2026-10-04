@@ -1107,6 +1107,16 @@
 
     <div id="problem-info-list">
     </div>
+
+　　<div
+  id="problem-info-editor"
+  style="margin-top:24px;"
+>
+  <p>
+    大問を選択すると、ここに情報入力欄を表示します。
+  </p>
+</div>
+    
   </div>
 </section>
   
@@ -1933,6 +1943,28 @@ async function loadMajorProblems() {
     return;
   }
 
+　const editor =
+  document.getElementById("problem-info-editor");
+
+const selectedProblem =
+  problems.find(
+    problem => problem.id === currentProblemId
+  );
+
+if (selectedProblem) {
+  const problemLabel =
+    selectedProblem.original_label ||
+    ("第" + selectedProblem.order_no + "問");
+
+  editor.innerHTML =
+    "<h3>" +
+    problemLabel +
+    "の情報を編集中</h3>";
+} else {
+  editor.innerHTML =
+    "<p>大問を選択してください。</p>";
+}
+  
   list.innerHTML = "";
 
 　if (
@@ -2145,6 +2177,18 @@ problems.forEach(problem => {
   button.style.marginRight = "8px";
   button.style.marginBottom = "8px";
 
+  if (problem.id === currentProblemId) {
+  button.className = "primary-button";
+}
+
+button.addEventListener(
+  "click",
+  async () => {
+    currentProblemId = problem.id;
+
+    await loadProblemInfoList();
+  }
+);
   list.appendChild(button);
 });
 }
