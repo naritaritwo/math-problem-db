@@ -1108,7 +1108,13 @@
     <div id="problem-info-list">
     </div>
 
-　　<div
+<div
+  id="problem-info-image-preview"
+  style="margin-top:20px; margin-bottom:24px;"
+>
+</div>
+    
+<div
   id="problem-info-editor"
   style="margin-top:24px;"
 >
@@ -2109,6 +2115,9 @@ async function loadProblemInfoList() {
   const list =
     document.getElementById("problem-info-list");
 
+　const imagePreview =
+  document.getElementById("problem-info-image-preview");
+  
   list.innerHTML =
     "<p>大問を読み込んでいます...</p>";
 
@@ -2196,6 +2205,138 @@ const selectedProblem =
 console.log("④ selectedProblem:", selectedProblem);
   
 if (selectedProblem) {
+
+　const { data: problemRegions, error: regionsError } =
+  await client
+    .from("math_problem_regions")
+    .select(`
+      id,
+      source_file_id,
+      page_number,
+      crop_x,
+      crop_y,
+      crop_width,
+      crop_height,
+      display_order
+    `)
+    .eq(
+      "problem_id",
+      selectedProblem.id
+    )
+    .order(
+      "display_order",
+      { ascending: true }
+    );
+
+if (regionsError) {
+  console.error(
+    "④ 問題範囲取得エラー:",
+    regionsError
+  );
+
+  imagePreview.innerHTML =
+    "<p>問題画像を読み込めませんでした。</p>";
+} else {
+  console.log(
+    "④ 問題範囲:",
+    problemRegions
+  );
+　if (problemRegions.length === 0) {
+  imagePreview.innerHTML =
+    "<p>この大問には問題範囲が登録されていません。</p>";
+} else {
+  const sourceFileIds =
+    [
+      ...new Set(
+        problemRegions.map(
+          region => region.source_file_id
+        )
+      )
+    ];
+
+  const { data: sourceFiles, error: filesError } =
+    await client
+      .from("math_source_files")
+      .select(`
+        id,
+        storage_path,
+        original_filename
+      `)
+      .in(
+        "id",
+        sourceFileIds
+      );
+
+  if (filesError) {
+    console.error(
+      "④ 問題画像ファイル取得エラー:",
+      filesError
+    );
+
+    imagePreview.innerHTML =
+      "<p>問題画像を読み込めませんでした。</p>";
+  } else {
+    console.log(
+      "④ 問題画像ファイル:",
+      sourceFiles
+    );
+　　imagePreview.innerHTML = "";
+
+for (const sourceFile of sourceFiles) {
+  const { data: signedData, error: signedError } =
+    await client.storage
+      .from("math-assets")
+      .createSignedUrl(
+        sourceFile.storage_path,
+        3600
+      );
+
+  if (signedError) {
+    console.error(
+      "④ Signed URL作成エラー:",
+      signedError
+    );
+    continue;
+  }
+
+  const img =
+    document.createElement("img");
+
+  img.src =
+    signedData.signedUrl;
+
+  img.alt =
+    sourceFile.original_filename;
+
+  img.style.display =
+    "block";
+
+  img.style.width =
+    "100%";
+
+  img.style.maxWidth =
+    "900px";
+
+  img.style.height =
+    "auto";
+
+  img.style.margin =
+    "0 auto 16px";
+
+  img.style.border =
+    "1px solid #ddd";
+
+  img.style.borderRadius =
+    "8px";
+
+  imagePreview.appendChild(img);
+}
+    
+  }
+}
+  
+}
+  
   const problemLabel =
     selectedProblem.original_label ||
     ("第" + selectedProblem.order_no + "問");
