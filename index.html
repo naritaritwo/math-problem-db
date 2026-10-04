@@ -2018,11 +2018,10 @@ fields.forEach(field => {
   primaryFieldSelect.appendChild(option);
 });
 
-if (selectedProblem.primary_field_id) {
-  primaryFieldSelect.value =
-    selectedProblem.primary_field_id;
-}
-  primaryFieldSelect.addEventListener(
+primaryFieldSelect.value =
+  selectedProblem.primary_field_id || "";
+  
+primaryFieldSelect.addEventListener(
   "change",
   async () => {
     const fieldId =
