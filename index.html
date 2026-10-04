@@ -1943,6 +1943,15 @@ async function loadMajorProblems() {
     return;
   }
 
+　if (
+  !currentProblemId ||
+  !problems.some(
+    problem => problem.id === currentProblemId
+  )
+) {
+  currentProblemId = problems[0].id;
+}
+  
 　const editor =
   document.getElementById("problem-info-editor");
 
@@ -2014,14 +2023,7 @@ fields.forEach(field => {
   
   list.innerHTML = "";
 
-　if (
-  !currentProblemId ||
-  !problems.some(
-    problem => problem.id === currentProblemId
-  )
-) {
-  currentProblemId = problems[0].id;
-}
+
   
 　problems.forEach(problem => {
   const button =
