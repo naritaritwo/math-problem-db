@@ -1956,10 +1956,57 @@ if (selectedProblem) {
     selectedProblem.original_label ||
     ("第" + selectedProblem.order_no + "問");
 
-  editor.innerHTML =
-    "<h3>" +
-    problemLabel +
-    "の情報を編集中</h3>";
+editor.innerHTML =
+  "<h3>" +
+  problemLabel +
+  "の情報を編集中</h3>" +
+  "<div style='margin-top:16px;'>" +
+    "<label for='problem-primary-field'>" +
+      "主分野" +
+    "</label>" +
+    "<select id='problem-primary-field'>" +
+      "<option value=''>未設定</option>" +
+    "</select>" +
+  "</div>";
+  const primaryFieldSelect =
+  document.getElementById(
+    "problem-primary-field"
+  );
+
+const { data: fields, error: fieldsError } =
+  await client
+    .from("math_fields")
+    .select(`
+      id,
+      name,
+      sort_order
+    `)
+    .order(
+      "sort_order",
+      { ascending: true }
+    );
+
+if (fieldsError) {
+  console.error(
+    "主分野取得エラー:",
+    fieldsError
+  );
+
+  alert(
+    "主分野を読み込めませんでした。"
+  );
+  return;
+}
+
+fields.forEach(field => {
+  const option =
+    document.createElement("option");
+
+  option.value = field.id;
+  option.textContent = field.name;
+
+  primaryFieldSelect.appendChild(option);
+});
 } else {
   editor.innerHTML =
     "<p>大問を選択してください。</p>";
