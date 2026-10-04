@@ -2130,7 +2130,8 @@ async function loadProblemInfoList() {
   order_no,
   original_label,
   primary_field_id,
-  middle_category_id
+  middle_category_id,
+  difficulty_level
 `)
       .eq(
         "problem_set_id",
@@ -2387,6 +2388,22 @@ editor.innerHTML =
 "<select id='problem-middle-category'>" +
 "<option value=''>未設定</option>" +
 "</select>" +
+"</div>" +
+
+"<div style='margin-top:16px;'>" +
+"<label for='problem-difficulty'>" +
+"難易度" +
+"</label>" +
+"<select id='problem-difficulty'>" +
+"<option value=''>未設定</option>" +
+"<option value='1'>1　教科書基本</option>" +
+"<option value='2'>2　教科書標準</option>" +
+"<option value='3'>3　教科書発展</option>" +
+"<option value='4'>4　教科書＋α</option>" +
+"<option value='5'>5　入試基本</option>" +
+"<option value='6'>6　入試標準</option>" +
+"<option value='7'>7　入試発展</option>" +
+"</select>" +
 "</div>";
   const primaryFieldSelect =
   document.getElementById(
@@ -2395,6 +2412,9 @@ editor.innerHTML =
   const middleCategorySelect =
   document.getElementById("problem-middle-category");
 
+　const difficultySelect =
+  document.getElementById("problem-difficulty");
+  
 async function loadMiddleCategories(fieldId) {
   middleCategorySelect.innerHTML =
     "<option value=''>未設定</option>";
@@ -2566,6 +2586,41 @@ middleCategorySelect.value = "";
 
     selectedProblem.middle_category_id =
       middleCategoryId;
+  }
+);
+difficultySelect.value =
+  selectedProblem.difficulty_level || "";
+
+difficultySelect.addEventListener(
+  "change",
+  async () => {
+    const difficultyLevel =
+      difficultySelect.value
+        ? Number(difficultySelect.value)
+        : null;
+
+    const { error: updateError } =
+      await client
+        .from("math_problems")
+        .update({
+          difficulty_level: difficultyLevel
+        })
+        .eq(
+          "id",
+          selectedProblem.id
+        );
+
+    if (updateError) {
+      console.error(
+        "難易度保存エラー:",
+        updateError
+      );
+      alert("難易度を保存できませんでした。");
+      return;
+    }
+
+    selectedProblem.difficulty_level =
+      difficultyLevel;
   }
 );
   
