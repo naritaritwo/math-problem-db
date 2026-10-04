@@ -2218,11 +2218,12 @@ async function loadProblemInfoList() {
     await client
       .from("math_problems")
       .select(`
-        id,
-        problem_code,
-        order_no,
-        original_label
-      `)
+  id,
+  problem_code,
+  order_no,
+  original_label,
+  primary_field_id
+`)
       .eq(
         "problem_set_id",
         currentProblemSetId
