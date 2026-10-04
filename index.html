@@ -1999,6 +1999,54 @@ const confirmed =
 if (!confirmed) {
   return;
 }
+
+  if (regionCount > 0) {
+  const { error: regionDeleteError } =
+    await client
+      .from("math_problem_regions")
+      .delete()
+      .eq("problem_id", problem.id);
+
+  if (regionDeleteError) {
+    console.error(
+      "大問範囲削除エラー:",
+      regionDeleteError
+    );
+
+    alert(
+      "大問の範囲を削除できませんでした。"
+    );
+    return;
+  }
+}
+    const { error: problemDeleteError } =
+  await client
+    .from("math_problems")
+    .delete()
+    .eq("id", problem.id);
+
+if (problemDeleteError) {
+  console.error(
+    "大問削除エラー:",
+    problemDeleteError
+  );
+
+  alert(
+    "大問を削除できませんでした。"
+  );
+  return;
+}
+
+alert(
+  problemLabel +
+  "を削除しました。"
+);
+    if (currentProblemId === problem.id) {
+  currentProblemId = null;
+}
+
+await loadMajorProblems();
+await loadProblemSplitFiles();
   }
 );
    
