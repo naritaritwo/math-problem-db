@@ -2592,17 +2592,19 @@ saveProblemRegionButton.addEventListener(
 
     saveProblemRegionButton.disabled = true;
 
-　　const { count: existingRegionCount, error: countError } =
+　　const { data: lastRegions, error: countError } =
   await client
     .from("math_problem_regions")
-    .select("id", {
-      count: "exact",
-      head: true
-    })
+    .select("display_order")
     .eq(
       "problem_id",
       pendingProblemRegion.problemId
-    );
+    )
+    .order(
+      "display_order",
+      { ascending: false }
+    )
+    .limit(1);
 
 if (countError) {
   console.error(
@@ -2614,7 +2616,10 @@ if (countError) {
   saveProblemRegionButton.disabled = false;
   return;
 }
-  
+  const nextDisplayOrder =
+  lastRegions && lastRegions.length > 0
+    ? lastRegions[0].display_order + 1
+    : 0;
     const { error } =
       await client
         .from("math_problem_regions")
@@ -2633,7 +2638,7 @@ if (countError) {
             pendingProblemRegion.cropWidth,
           crop_height:
             pendingProblemRegion.cropHeight,
-          display_order: existingRegionCount
+          display_order: nextDisplayOrder
         });
 
     if (error) {
