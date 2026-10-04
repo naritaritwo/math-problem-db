@@ -2084,7 +2084,70 @@ await loadProblemSplitFiles();
 list.appendChild(deleteButton);
 });
 }
+/* ===== 問題登録：STEP 4 大問情報一覧 ===== */
 
+async function loadProblemInfoList() {
+  const list =
+    document.getElementById("problem-info-list");
+
+  list.innerHTML =
+    "<p>大問を読み込んでいます...</p>";
+
+  const { data: problems, error } =
+    await client
+      .from("math_problems")
+      .select(`
+        id,
+        problem_code,
+        order_no,
+        original_label
+      `)
+      .eq(
+        "problem_set_id",
+        currentProblemSetId
+      )
+      .is("deleted_at", null)
+      .order(
+        "order_no",
+        { ascending: true }
+      );
+
+  if (error) {
+    console.error(
+      "大問情報一覧取得エラー:",
+      error
+    );
+
+    list.innerHTML =
+      "<p>大問を読み込めませんでした。</p>";
+
+    return;
+  }
+
+  if (!problems || problems.length === 0) {
+  list.innerHTML =
+    "<p>大問はまだ作成されていません。</p>";
+  return;
+}
+
+list.innerHTML = "";
+
+problems.forEach(problem => {
+  const button =
+    document.createElement("button");
+
+  button.type = "button";
+
+  button.textContent =
+    problem.original_label ||
+    ("第" + problem.order_no + "問");
+
+  button.style.marginRight = "8px";
+  button.style.marginBottom = "8px";
+
+  list.appendChild(button);
+});
+}
 　　/* ===== 問題登録：大問追加 ===== */
 
 const addMajorProblemButton =
@@ -2732,7 +2795,7 @@ const registerStep3NextButton =
 
 registerStep3NextButton.addEventListener(
   "click",
-  () => {
+  async () => {
     document.getElementById(
       "register-step-3"
     ).style.display = "none";
@@ -2740,7 +2803,7 @@ registerStep3NextButton.addEventListener(
     document.getElementById(
       "register-step-4"
     ).style.display = "block";
-
+　await loadProblemInfoList();
     window.scrollTo(0, 0);
   }
 );
