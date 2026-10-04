@@ -1940,6 +1940,33 @@ async function loadMajorProblems() {
   );
 
   list.appendChild(button);
+
+   const deleteButton =
+  document.createElement("button");
+
+deleteButton.type = "button";
+deleteButton.textContent = "削除";
+
+deleteButton.style.marginRight = "16px";
+deleteButton.style.marginBottom = "8px";
+
+deleteButton.addEventListener(
+  "click",
+  event => {
+    event.stopPropagation();
+
+    const problemLabel =
+      problem.original_label ||
+      ("第" + problem.order_no + "問");
+
+    confirm(
+      problemLabel +
+      "を削除しますか？"
+    );
+  }
+);
+   
+list.appendChild(deleteButton);
 });
 }
 
