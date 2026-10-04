@@ -2241,6 +2241,12 @@ async function loadProblemInfoList() {
         { ascending: true }
       );
 
+　　console.log(
+  "④ DB取得結果:",
+  problems,
+  error
+);
+  
   if (error) {
     console.error(
       "大問情報一覧取得エラー:",
