@@ -1917,11 +1917,12 @@ async function loadMajorProblems() {
     await client
       .from("math_problems")
       .select(`
-        id,
-        problem_code,
-        order_no,
-        original_label
-      `)
+  id,
+  problem_code,
+  order_no,
+  original_label,
+  primary_field_id
+`)
       .eq("problem_set_id", currentProblemSetId)
       .is("deleted_at", null)
       .order("order_no", { ascending: true });
@@ -2016,6 +2017,45 @@ fields.forEach(field => {
 
   primaryFieldSelect.appendChild(option);
 });
+
+if (selectedProblem.primary_field_id) {
+  primaryFieldSelect.value =
+    selectedProblem.primary_field_id;
+}
+  primaryFieldSelect.addEventListener(
+  "change",
+  async () => {
+    const fieldId =
+      primaryFieldSelect.value || null;
+
+    const { error: updateError } =
+      await client
+        .from("math_problems")
+        .update({
+          primary_field_id: fieldId
+        })
+        .eq(
+          "id",
+          selectedProblem.id
+        );
+
+    if (updateError) {
+      console.error(
+        "主分野保存エラー:",
+        updateError
+      );
+
+      alert(
+        "主分野を保存できませんでした。"
+      );
+
+      return;
+    }
+
+    selectedProblem.primary_field_id =
+      fieldId;
+  }
+);
 } else {
   editor.innerHTML =
     "<p>大問を選択してください。</p>";
