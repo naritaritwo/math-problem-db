@@ -1077,8 +1077,39 @@
   </div>
 </div>
   </div>
+  <div style="margin-top:24px;">
+  <button
+    type="button"
+    id="register-step-3-next-button"
+    class="primary-button"
+  >
+    ④ 大問情報へ
+  </button>
+</div>
 </section>
 
+　<section
+  id="register-step-4"
+  style="display:none;"
+>
+  <h2>④ 大問情報</h2>
+
+  <p>
+    各大問の分類・難易度・配点などを設定します。
+  </p>
+
+  <div class="card">
+    <h3>大問情報</h3>
+
+    <p>
+      編集する大問を選択してください。
+    </p>
+
+    <div id="problem-info-list">
+    </div>
+  </div>
+</section>
+  
 </section>
 
 </main>
@@ -2689,6 +2720,28 @@ registerStep2NextButton.addEventListener(
 　　await loadMajorProblems();
 
 　　window.scrollTo(0, 0);
+  }
+);
+
+    /* ===== 問題登録：STEP 3 → STEP 4 ===== */
+
+const registerStep3NextButton =
+  document.getElementById(
+    "register-step-3-next-button"
+  );
+
+registerStep3NextButton.addEventListener(
+  "click",
+  () => {
+    document.getElementById(
+      "register-step-3"
+    ).style.display = "none";
+
+    document.getElementById(
+      "register-step-4"
+    ).style.display = "block";
+
+    window.scrollTo(0, 0);
   }
 );
     /* ===== 問題登録：問題資料ファイル選択 ===== */
