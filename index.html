@@ -1953,115 +1953,6 @@ async function loadMajorProblems() {
   currentProblemId = problems[0].id;
 }
   
-　const editor =
-  document.getElementById("problem-info-editor");
-
-const selectedProblem =
-  problems.find(
-    problem => problem.id === currentProblemId
-  );
-
-console.log("④ selectedProblem:", selectedProblem);
-  
-if (selectedProblem) {
-  const problemLabel =
-    selectedProblem.original_label ||
-    ("第" + selectedProblem.order_no + "問");
-
-editor.innerHTML =
-  "<h3>" +
-  problemLabel +
-  "の情報を編集中</h3>" +
-  "<div style='margin-top:16px;'>" +
-    "<label for='problem-primary-field'>" +
-      "主分野" +
-    "</label>" +
-    "<select id='problem-primary-field'>" +
-      "<option value=''>未設定</option>" +
-    "</select>" +
-  "</div>";
-  const primaryFieldSelect =
-  document.getElementById(
-    "problem-primary-field"
-  );
-
-const { data: fields, error: fieldsError } =
-  await client
-    .from("math_fields")
-    .select(`
-      id,
-      name,
-      sort_order
-    `)
-    .order(
-      "sort_order",
-      { ascending: true }
-    );
-
-if (fieldsError) {
-  console.error(
-    "主分野取得エラー:",
-    fieldsError
-  );
-
-  alert(
-    "主分野を読み込めませんでした。"
-  );
-  return;
-}
-
-fields.forEach(field => {
-  const option =
-    document.createElement("option");
-
-  option.value = field.id;
-  option.textContent = field.name;
-
-  primaryFieldSelect.appendChild(option);
-});
-
-primaryFieldSelect.value =
-  selectedProblem.primary_field_id || "";
-  
-primaryFieldSelect.addEventListener(
-  "change",
-  async () => {
-    const fieldId =
-      primaryFieldSelect.value || null;
-
-    const { error: updateError } =
-      await client
-        .from("math_problems")
-        .update({
-          primary_field_id: fieldId
-        })
-        .eq(
-          "id",
-          selectedProblem.id
-        );
-
-    if (updateError) {
-      console.error(
-        "主分野保存エラー:",
-        updateError
-      );
-
-      alert(
-        "主分野を保存できませんでした。"
-      );
-
-      return;
-    }
-
-    selectedProblem.primary_field_id =
-      fieldId;
-  }
-);
-} else {
-  editor.innerHTML =
-    "<p>大問を選択してください。</p>";
-}
-  
   list.innerHTML = "";
 
 
@@ -2294,6 +2185,114 @@ button.addEventListener(
 );
   list.appendChild(button);
 });
+  　const editor =
+  document.getElementById("problem-info-editor");
+
+const selectedProblem =
+  problems.find(
+    problem => problem.id === currentProblemId
+  );
+
+console.log("④ selectedProblem:", selectedProblem);
+  
+if (selectedProblem) {
+  const problemLabel =
+    selectedProblem.original_label ||
+    ("第" + selectedProblem.order_no + "問");
+
+editor.innerHTML =
+  "<h3>" +
+  problemLabel +
+  "の情報を編集中</h3>" +
+  "<div style='margin-top:16px;'>" +
+    "<label for='problem-primary-field'>" +
+      "主分野" +
+    "</label>" +
+    "<select id='problem-primary-field'>" +
+      "<option value=''>未設定</option>" +
+    "</select>" +
+  "</div>";
+  const primaryFieldSelect =
+  document.getElementById(
+    "problem-primary-field"
+  );
+
+const { data: fields, error: fieldsError } =
+  await client
+    .from("math_fields")
+    .select(`
+      id,
+      name,
+      sort_order
+    `)
+    .order(
+      "sort_order",
+      { ascending: true }
+    );
+
+if (fieldsError) {
+  console.error(
+    "主分野取得エラー:",
+    fieldsError
+  );
+
+  alert(
+    "主分野を読み込めませんでした。"
+  );
+  return;
+}
+
+fields.forEach(field => {
+  const option =
+    document.createElement("option");
+
+  option.value = field.id;
+  option.textContent = field.name;
+
+  primaryFieldSelect.appendChild(option);
+});
+
+primaryFieldSelect.value =
+  selectedProblem.primary_field_id || "";
+  
+primaryFieldSelect.addEventListener(
+  "change",
+  async () => {
+    const fieldId =
+      primaryFieldSelect.value || null;
+
+    const { error: updateError } =
+      await client
+        .from("math_problems")
+        .update({
+          primary_field_id: fieldId
+        })
+        .eq(
+          "id",
+          selectedProblem.id
+        );
+
+    if (updateError) {
+      console.error(
+        "主分野保存エラー:",
+        updateError
+      );
+
+      alert(
+        "主分野を保存できませんでした。"
+      );
+
+      return;
+    }
+
+    selectedProblem.primary_field_id =
+      fieldId;
+  }
+);
+} else {
+  editor.innerHTML =
+    "<p>大問を選択してください。</p>";
+}
 }
 　　/* ===== 問題登録：大問追加 ===== */
 
