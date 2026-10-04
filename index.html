@@ -2129,7 +2129,8 @@ async function loadProblemInfoList() {
   problem_code,
   order_no,
   original_label,
-  primary_field_id
+  primary_field_id,
+  middle_category_id
 `)
       .eq(
         "problem_set_id",
@@ -2377,11 +2378,76 @@ editor.innerHTML =
     "<select id='problem-primary-field'>" +
       "<option value=''>未設定</option>" +
     "</select>" +
-  "</div>";
+  "</div>" +
+
+"<div style='margin-top:16px;'>" +
+"<label for='problem-middle-category'>" +
+"中分類" +
+"</label>" +
+"<select id='problem-middle-category'>" +
+"<option value=''>未設定</option>" +
+"</select>" +
+"</div>";
   const primaryFieldSelect =
   document.getElementById(
     "problem-primary-field"
   );
+  const middleCategorySelect =
+  document.getElementById("problem-middle-category");
+
+async function loadMiddleCategories(fieldId) {
+  middleCategorySelect.innerHTML =
+    "<option value=''>未設定</option>";
+
+  if (!fieldId) {
+    return;
+  }
+
+  const {
+    data: middleCategories,
+    error: middleCategoriesError
+  } =
+    await client
+      .from("math_middle_categories")
+      .select(`
+        id,
+        name,
+        sort_order
+      `)
+      .eq(
+        "field_id",
+        fieldId
+      )
+      .order(
+        "sort_order",
+        { ascending: true }
+      );
+
+  if (middleCategoriesError) {
+    console.error(
+      "中分類取得エラー:",
+      middleCategoriesError
+    );
+    return;
+  }
+
+  middleCategories.forEach(
+    category => {
+      const option =
+        document.createElement("option");
+
+      option.value =
+        category.id;
+
+      option.textContent =
+        category.name;
+
+      middleCategorySelect.appendChild(
+        option
+      );
+    }
+  );
+}
 
 const { data: fields, error: fieldsError } =
   await client
@@ -2420,6 +2486,13 @@ fields.forEach(field => {
 
 primaryFieldSelect.value =
   selectedProblem.primary_field_id || "";
+
+　await loadMiddleCategories(
+  selectedProblem.primary_field_id
+);
+
+middleCategorySelect.value =
+  selectedProblem.middle_category_id || "";
   
 primaryFieldSelect.addEventListener(
   "change",
@@ -2427,12 +2500,19 @@ primaryFieldSelect.addEventListener(
     const fieldId =
       primaryFieldSelect.value || null;
 
+　　await loadMiddleCategories(
+  　　fieldId
+　　);
+
+middleCategorySelect.value = "";
+    
     const { error: updateError } =
       await client
         .from("math_problems")
         .update({
-          primary_field_id: fieldId
-        })
+  　　　　primary_field_id: fieldId,
+  　　　　middle_category_id: null
+　　　　})
         .eq(
           "id",
           selectedProblem.id
@@ -2453,8 +2533,42 @@ primaryFieldSelect.addEventListener(
 
     selectedProblem.primary_field_id =
       fieldId;
+    selectedProblem.middle_category_id =
+  　　null;
   }
 );
+
+　middleCategorySelect.addEventListener(
+  "change",
+  async () => {
+    const middleCategoryId =
+      middleCategorySelect.value || null;
+
+    const { error: updateError } =
+      await client
+        .from("math_problems")
+        .update({
+          middle_category_id: middleCategoryId
+        })
+        .eq(
+          "id",
+          selectedProblem.id
+        );
+
+    if (updateError) {
+      console.error(
+        "中分類保存エラー:",
+        updateError
+      );
+      alert("中分類を保存できませんでした。");
+      return;
+    }
+
+    selectedProblem.middle_category_id =
+      middleCategoryId;
+  }
+);
+  
 } else {
   editor.innerHTML =
     "<p>大問を選択してください。</p>";
