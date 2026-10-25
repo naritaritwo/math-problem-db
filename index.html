@@ -2131,7 +2131,9 @@ async function loadProblemInfoList() {
   original_label,
   primary_field_id,
   middle_category_id,
-  difficulty_level
+  difficulty_level,
+  score,
+  score_source
 `)
       .eq(
         "problem_set_id",
@@ -2404,6 +2406,26 @@ editor.innerHTML =
 "<option value='6'>6　入試標準</option>" +
 "<option value='7'>7　入試発展</option>" +
 "</select>" +
+"</div>" +
+
+"<div style='margin-top:16px;'>" +
+"<label for='problem-score'>" +
+"配点" +
+"</label>" +
+"<input id='problem-score' " +
+"type='number' min='0' step='any' " +
+"placeholder='未設定' />" +
+"</div>" +
+
+"<div style='margin-top:16px;'>" +
+"<label for='problem-score-source'>" +
+"配点ソース" +
+"</label>" +
+"<select id='problem-score-source'>" +
+"<option value='unset'>未設定</option>" +
+"<option value='official'>公表</option>" +
+"<option value='estimated'>推定</option>" +
+"</select>" +
 "</div>";
   const primaryFieldSelect =
   document.getElementById(
@@ -2414,6 +2436,18 @@ editor.innerHTML =
 
 　const difficultySelect =
   document.getElementById("problem-difficulty");
+
+　const scoreInput =
+  document.getElementById("problem-score");
+
+　const scoreSourceSelect =
+  document.getElementById("problem-score-source");
+
+　scoreInput.value =
+  selectedProblem.score ?? "";
+
+　scoreSourceSelect.value =
+  selectedProblem.score_source || "unset";
   
 async function loadMiddleCategories(fieldId) {
   middleCategorySelect.innerHTML =
@@ -2621,6 +2655,76 @@ difficultySelect.addEventListener(
 
     selectedProblem.difficulty_level =
       difficultyLevel;
+  }
+);
+  scoreInput.addEventListener(
+  "change",
+  async () => {
+    const score =
+      scoreInput.value === ""
+        ? null
+        : Number(scoreInput.value);
+
+    if (
+      score !== null &&
+      (!Number.isFinite(score) || score <= 0)
+    ) {
+      alert("配点は0より大きい数値を入力してください。");
+      return;
+    }
+
+    const { error: updateError } =
+      await client
+        .from("math_problems")
+        .update({
+          score: score
+        })
+        .eq(
+          "id",
+          selectedProblem.id
+        );
+
+    if (updateError) {
+      console.error(
+        "配点保存エラー:",
+        updateError
+      );
+      alert("配点を保存できませんでした。");
+      return;
+    }
+
+    selectedProblem.score = score;
+  }
+);
+
+　scoreSourceSelect.addEventListener(
+  "change",
+  async () => {
+    const scoreSource =
+      scoreSourceSelect.value;
+
+    const { error: updateError } =
+      await client
+        .from("math_problems")
+        .update({
+          score_source: scoreSource
+        })
+        .eq(
+          "id",
+          selectedProblem.id
+        );
+
+    if (updateError) {
+      console.error(
+        "配点ソース保存エラー:",
+        updateError
+      );
+      alert("配点ソースを保存できませんでした。");
+      return;
+    }
+
+    selectedProblem.score_source =
+      scoreSource;
   }
 );
   
