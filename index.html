@@ -2133,7 +2133,8 @@ async function loadProblemInfoList() {
   middle_category_id,
   difficulty_level,
   score,
-  score_source
+  score_source,
+  baseline_minutes
 `)
       .eq(
         "problem_set_id",
@@ -2426,6 +2427,15 @@ editor.innerHTML =
 "<option value='公表'>公表</option>" +
 "<option value='推定'>推定</option>" +
 "</select>" +
+"</div>" +
+
+"<div style='margin-top:16px;'>" +
+"<label for='problem-baseline-minutes'>" +
+"基準解答時間（分）" +
+"</label>" +
+"<input id='problem-baseline-minutes' " +
+"type='text' inputmode='decimal' " +
+"placeholder='未設定' />" +
 "</div>";
   const primaryFieldSelect =
   document.getElementById(
@@ -2443,6 +2453,12 @@ editor.innerHTML =
 　const scoreSourceSelect =
   document.getElementById("problem-score-source");
 
+  const baselineMinutesInput =
+  document.getElementById("problem-baseline-minutes");
+
+baselineMinutesInput.value =
+  selectedProblem.baseline_minutes ?? "";
+  
 　scoreInput.value =
   selectedProblem.score ?? "";
 
@@ -2739,6 +2755,58 @@ if (
 
     selectedProblem.score_source =
       scoreSource;
+  }
+);
+baselineMinutesInput.addEventListener(
+  "change",
+  async () => {
+    const normalizedMinutes =
+      baselineMinutesInput.value
+        .normalize("NFKC")
+        .replace(/[\s\u3000]/g, "");
+
+    const minutes =
+      normalizedMinutes === ""
+        ? null
+        : Number(normalizedMinutes);
+
+    if (
+      normalizedMinutes !== "" &&
+      (
+        !Number.isFinite(minutes) ||
+        !Number.isInteger(minutes) ||
+        minutes <= 0
+      )
+    ) {
+      alert("基準解答時間は1以上の整数で入力してください。");
+      return;
+    }
+
+    const { error: updateError } =
+      await client
+        .from("math_problems")
+        .update({
+          baseline_minutes: minutes
+        })
+        .eq(
+          "id",
+          selectedProblem.id
+        );
+
+    if (updateError) {
+      console.error(
+        "基準解答時間保存エラー:",
+        updateError
+      );
+      alert("基準解答時間を保存できませんでした。");
+      return;
+    }
+
+    baselineMinutesInput.value =
+      minutes === null ? "" : String(minutes);
+
+    selectedProblem.baseline_minutes =
+      minutes;
   }
 );
   
