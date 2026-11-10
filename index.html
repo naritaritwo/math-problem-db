@@ -2467,6 +2467,15 @@ editor.innerHTML =
 "<p id='content-tag-add-status' " +
 "style='font-size:13px; margin-top:8px;'>" +
 "</p>" +
+
+"<div style='margin-top:20px;'>" +
+"<label><strong>解法タグ（複数選択可）</strong></label>" +
+"<div id='problem-method-tags' " +
+"style='margin-top:8px;'>" +
+"<p>解法タグを読み込んでいます...</p>" +
+"</div>" +
+"</div>" +
+
 "</div>";
   const primaryFieldSelect =
   document.getElementById(
@@ -2487,6 +2496,104 @@ editor.innerHTML =
   const baselineMinutesInput =
   document.getElementById("problem-baseline-minutes");
 
+　// 解法タグの表示領域を取得
+const methodTagsArea =
+  document.getElementById("problem-method-tags");
+
+
+  
+// Supabaseから解法タグを取得
+const { data: methodTags, error: methodTagsError } =
+  await client
+    .from("math_method_tags")
+    .select("id,name,sort_order")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+if (methodTagsError) {
+  console.error(
+    "解法タグ取得エラー:",
+    methodTagsError
+  );
+
+  methodTagsArea.textContent =
+    "解法タグを読み込めませんでした。";
+} else {
+  console.log("④ 解法タグ取得結果:", methodTags);
+
+  methodTagsArea.innerHTML = "";
+
+  if (methodTags.length === 0) {
+    methodTagsArea.textContent =
+      "登録済みの解法タグがありません。";
+  } else {
+    methodTags.forEach(tag => {
+      const label = document.createElement("label");
+
+      label.style.display = "block";
+      label.style.marginBottom = "8px";
+      label.style.cursor = "pointer";
+
+      const checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.value = tag.id;
+      checkbox.checked = selectedMethodTagIds.has(tag.id);
+      checkbox.style.marginRight = "8px";
+　　　checkbox.addEventListener("change", async () => {
+  if (!checkbox.checked) {
+    checkbox.disabled = true;
+
+    const { error: deleteError } = await client
+      .from("math_problem_method_tags")
+      .delete()
+      .eq("problem_id", selectedProblem.id)
+      .eq("method_tag_id", tag.id);
+
+    if (deleteError) {
+      console.error("解法タグ解除エラー:", deleteError);
+
+      checkbox.checked = true;
+      alert("解法タグを解除できませんでした。");
+    } else {
+      selectedMethodTagIds.delete(tag.id);
+    }
+
+    checkbox.disabled = false;
+    return;
+  }
+
+  checkbox.disabled = true;
+
+  const { error: insertError } = await client
+    .from("math_problem_method_tags")
+    .insert({
+      problem_id: selectedProblem.id,
+      method_tag_id: tag.id
+    });
+
+  if (insertError) {
+    console.error("解法タグ保存エラー:", insertError);
+
+    checkbox.checked = false;
+    alert("解法タグを保存できませんでした。");
+  } else {
+    selectedMethodTagIds.add(tag.id);
+  }
+
+  checkbox.disabled = false;
+});
+      
+      label.appendChild(checkbox);
+      label.appendChild(
+        document.createTextNode(tag.name)
+      );
+
+      methodTagsArea.appendChild(label);
+    });
+  }
+}
+  
 　const contentTagsArea =
   document.getElementById("problem-content-tags");
 
