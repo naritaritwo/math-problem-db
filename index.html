@@ -2440,6 +2440,14 @@ editor.innerHTML =
 
 "<div style='margin-top:20px;'>" +
 "<label>内容タグ（複数選択可）</label>" +
+
+"<input id='content-tag-search' " +
+"type='text' " +
+"placeholder='内容タグを検索...' " +
+"style='width:100%; max-width:350px; " +
+"padding:8px; margin-top:8px; " +
+"box-sizing:border-box;' />" +
+  
 "<div id='problem-content-tags' " +
 "style='margin-top:8px;'>" +
 "<p>内容タグを読み込んでいます...</p>" +
@@ -2482,6 +2490,30 @@ editor.innerHTML =
 　const contentTagsArea =
   document.getElementById("problem-content-tags");
 
+　const contentTagSearch =
+  document.getElementById("content-tag-search");
+
+contentTagSearch.addEventListener(
+  "input",
+  () => {
+    const keyword =
+      contentTagSearch.value.trim().toLowerCase();
+
+    const tagLabels =
+      contentTagsArea.querySelectorAll("label");
+
+    tagLabels.forEach(label => {
+      const tagName =
+        label.textContent.toLowerCase();
+
+      label.style.display =
+        tagName.includes(keyword)
+          ? "block"
+          : "none";
+    });
+  }
+);
+  
 　const newContentTagInput =
   document.getElementById("new-content-tag-name");
 
@@ -2624,6 +2656,21 @@ if (contentTags.length === 0) {
   contentTagsArea.textContent =
     "登録済みの内容タグがありません。";
 } else {
+
+  contentTags.sort((a, b) => {
+  const aSelected =
+    selectedContentTagIds.has(a.id);
+
+  const bSelected =
+    selectedContentTagIds.has(b.id);
+
+  if (aSelected === bSelected) {
+    return 0;
+  }
+
+  return aSelected ? -1 : 1;
+});
+  
   contentTags.forEach(tag => {
     const label =
       document.createElement("label");
