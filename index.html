@@ -2467,6 +2467,32 @@ editor.innerHTML =
 　const contentTagsArea =
   document.getElementById("problem-content-tags");
 
+　const {
+  data: selectedContentTags,
+  error: selectedContentTagsError
+} =
+  await client
+    .from("math_problem_content_tags")
+    .select("content_tag_id")
+    .eq(
+      "problem_id",
+      selectedProblem.id
+    );
+
+if (selectedContentTagsError) {
+  console.error(
+    "選択済み内容タグ取得エラー:",
+    selectedContentTagsError
+  );
+}
+
+const selectedContentTagIds =
+  new Set(
+    (selectedContentTags || []).map(
+      item => item.content_tag_id
+    )
+  );
+  
 const { data: contentTags, error: contentTagsError } =
   await client
     .from("math_content_tags")
@@ -2512,7 +2538,72 @@ if (contentTags.length === 0) {
 
     checkbox.type = "checkbox";
     checkbox.value = tag.id;
+    
+    checkbox.checked =
+  　　selectedContentTagIds.has(tag.id);
+    
     checkbox.style.marginRight = "8px";
+
+checkbox.addEventListener(
+  "change",
+  async () => {
+    if (!checkbox.checked) {
+      checkbox.disabled = true;
+
+      const { error: deleteError } =
+        await client
+          .from("math_problem_content_tags")
+          .delete()
+          .eq(
+            "problem_id",
+            selectedProblem.id
+          )
+          .eq(
+            "content_tag_id",
+            tag.id
+          );
+
+      if (deleteError) {
+        console.error(
+          "内容タグ解除エラー:",
+          deleteError
+        );
+
+        checkbox.checked = true;
+        alert("内容タグを解除できませんでした。");
+      } else {
+        selectedContentTagIds.delete(tag.id);
+      }
+
+      checkbox.disabled = false;
+      return;
+    }
+
+    checkbox.disabled = true;
+
+    const { error: insertError } =
+      await client
+        .from("math_problem_content_tags")
+        .insert({
+          problem_id: selectedProblem.id,
+          content_tag_id: tag.id
+        });
+
+    if (insertError) {
+      console.error(
+        "内容タグ保存エラー:",
+        insertError
+      );
+
+      checkbox.checked = false;
+      alert("内容タグを保存できませんでした。");
+    } else {
+      selectedContentTagIds.add(tag.id);
+    }
+
+    checkbox.disabled = false;
+  }
+);
 
     label.appendChild(checkbox);
     label.appendChild(
