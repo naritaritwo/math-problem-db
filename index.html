@@ -2500,7 +2500,26 @@ editor.innerHTML =
 const methodTagsArea =
   document.getElementById("problem-method-tags");
 
+// 現在の大問に保存された解法タグを取得
+const { data: selectedMethodTags, error: selectedMethodTagsError } =
+  await client
+    .from("math_problem_method_tags")
+    .select("method_tag_id")
+    .eq("problem_id", selectedProblem.id);
 
+if (selectedMethodTagsError) {
+  console.error(
+    "選択済み解法タグ取得エラー:",
+    selectedMethodTagsError
+  );
+}
+
+// 保存済みの解法タグIDを保持
+const selectedMethodTagIds = new Set(
+  (selectedMethodTags || []).map(
+    item => item.method_tag_id
+  )
+);
   
 // Supabaseから解法タグを取得
 const { data: methodTags, error: methodTagsError } =
