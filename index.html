@@ -2436,6 +2436,14 @@ editor.innerHTML =
 "<input id='problem-baseline-minutes' " +
 "type='text' " +
 "placeholder='未設定' />" +
+"</div>" +
+
+"<div style='margin-top:20px;'>" +
+"<label>内容タグ（複数選択可）</label>" +
+"<div id='problem-content-tags' " +
+"style='margin-top:8px;'>" +
+"<p>内容タグを読み込んでいます...</p>" +
+"</div>" +
 "</div>";
   const primaryFieldSelect =
   document.getElementById(
@@ -2456,6 +2464,66 @@ editor.innerHTML =
   const baselineMinutesInput =
   document.getElementById("problem-baseline-minutes");
 
+　const contentTagsArea =
+  document.getElementById("problem-content-tags");
+
+const { data: contentTags, error: contentTagsError } =
+  await client
+    .from("math_content_tags")
+    .select(`
+      id,
+      name,
+      field_id,
+      sort_order
+    `)
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true })
+    .order("name", { ascending: true });
+
+if (contentTagsError) {
+  console.error(
+    "内容タグ取得エラー:",
+    contentTagsError
+  );
+
+  contentTagsArea.innerHTML =
+    "<p>内容タグを読み込めませんでした。</p>";
+} else {
+  console.log(
+    "④ 内容タグ取得結果:",
+    contentTags
+  );
+  contentTagsArea.innerHTML = "";
+
+if (contentTags.length === 0) {
+  contentTagsArea.textContent =
+    "登録済みの内容タグがありません。";
+} else {
+  contentTags.forEach(tag => {
+    const label =
+      document.createElement("label");
+
+    label.style.display = "block";
+    label.style.marginBottom = "8px";
+    label.style.cursor = "pointer";
+
+    const checkbox =
+      document.createElement("input");
+
+    checkbox.type = "checkbox";
+    checkbox.value = tag.id;
+    checkbox.style.marginRight = "8px";
+
+    label.appendChild(checkbox);
+    label.appendChild(
+      document.createTextNode(tag.name)
+    );
+
+    contentTagsArea.appendChild(label);
+  });
+}
+}
+  
 baselineMinutesInput.value =
   selectedProblem.baseline_minutes ?? "";
   
