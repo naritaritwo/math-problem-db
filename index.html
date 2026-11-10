@@ -2444,6 +2444,21 @@ editor.innerHTML =
 "style='margin-top:8px;'>" +
 "<p>内容タグを読み込んでいます...</p>" +
 "</div>" +
+"</div>" +
+
+"<div style='margin-top:12px;'>" +
+"<input id='new-content-tag-name' " +
+"type='text' " +
+"placeholder='新しい内容タグ名' />" +
+"<button id='add-content-tag-button' " +
+"type='button'>" +
+"タグを追加" +
+"</button>" +
+"</div>" +
+
+"<p id='content-tag-add-status' " +
+"style='font-size:13px; margin-top:8px;'>" +
+"</p>" +
 "</div>";
   const primaryFieldSelect =
   document.getElementById(
@@ -2467,6 +2482,90 @@ editor.innerHTML =
 　const contentTagsArea =
   document.getElementById("problem-content-tags");
 
+　const newContentTagInput =
+  document.getElementById("new-content-tag-name");
+
+　const addContentTagButton =
+  document.getElementById("add-content-tag-button");
+
+　const contentTagAddStatus =
+  document.getElementById("content-tag-add-status");
+
+　addContentTagButton.addEventListener(
+  "click",
+  async () => {
+    const newTagName =
+      newContentTagInput.value.trim();
+
+    contentTagAddStatus.textContent = "";
+
+    // 空欄チェック
+    if (!newTagName) {
+      contentTagAddStatus.textContent =
+        "タグ名を入力してください。";
+      return;
+    }
+
+    // 重複チェック
+    const { data: existingTags, error: checkError } =
+      await client
+        .from("math_content_tags")
+        .select("id,name");
+
+    if (checkError) {
+      console.error(
+        "内容タグ確認エラー:",
+        checkError
+      );
+      contentTagAddStatus.textContent =
+        "タグの確認に失敗しました。";
+      return;
+    }
+
+    const isDuplicate = existingTags.some(
+      tag => tag.name === newTagName
+    );
+
+    if (isDuplicate) {
+      contentTagAddStatus.textContent =
+        "同じ名前のタグが既に登録されています。";
+      return;
+    }
+
+    // 新しい内容タグをSupabaseに登録
+addContentTagButton.disabled = true;
+contentTagAddStatus.textContent =
+  "タグを登録しています...";
+
+const { data: newTag, error: insertError } =
+  await client
+    .from("math_content_tags")
+    .insert({
+      name: newTagName,
+      field_id: selectedProblem.field_id || null
+    })
+    .select("id,name,field_id")
+    .single();
+
+if (insertError) {
+  console.error(
+    "内容タグ登録エラー:",
+    insertError
+  );
+
+  contentTagAddStatus.textContent =
+    "タグの登録に失敗しました。";
+} else {
+  newContentTagInput.value = "";
+
+  // 内容タグ一覧を再取得して画面を更新
+  await loadProblemInfoList();
+}
+
+addContentTagButton.disabled = false;
+  }
+);
+  
 　const {
   data: selectedContentTags,
   error: selectedContentTagsError
