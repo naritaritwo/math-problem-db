@@ -2470,10 +2470,33 @@ editor.innerHTML =
 
 "<div style='margin-top:20px;'>" +
 "<label><strong>解法タグ（複数選択可）</strong></label>" +
+
+"<input id='method-tag-search' " +
+"type='text' " +
+"placeholder='解法タグを検索...' " +
+"style='width:100%; max-width:350px; " +
+"padding:8px; margin-top:8px; " +
+"box-sizing:border-box;' />" +
+  
 "<div id='problem-method-tags' " +
 "style='margin-top:8px;'>" +
 "<p>解法タグを読み込んでいます...</p>" +
 "</div>" +
+
+"<div style='margin-top:12px;'>" +
+"<input id='new-method-tag-name' " +
+"type='text' " +
+"placeholder='新しい解法タグ名' />" +
+"<button id='add-method-tag-button' " +
+"type='button'>" +
+"タグを追加" +
+"</button>" +
+"</div>" +
+
+"<p id='method-tag-add-status' " +
+"style='font-size:13px; margin-top:8px;'>" +
+"</p>" +
+
 "</div>" +
 
 "</div>";
@@ -2499,6 +2522,112 @@ editor.innerHTML =
 　// 解法タグの表示領域を取得
 const methodTagsArea =
   document.getElementById("problem-method-tags");
+
+  // 新しい解法タグの入力欄
+const newMethodTagInput =
+  document.getElementById("new-method-tag-name");
+
+// 解法タグの追加ボタン
+const addMethodTagButton =
+  document.getElementById("add-method-tag-button");
+
+// 登録結果やエラーの表示欄
+const methodTagAddStatus =
+  document.getElementById("method-tag-add-status");
+
+  addMethodTagButton.addEventListener("click", async () => {
+  const newTagName =
+    newMethodTagInput.value.trim();
+
+  methodTagAddStatus.textContent = "";
+
+  // 空欄チェック
+  if (!newTagName) {
+    methodTagAddStatus.textContent =
+      "解法タグ名を入力してください。";
+    return;
+  }
+
+  // 登録済みの解法タグを確認
+  const { data: existingTags, error: checkError } =
+    await client
+      .from("math_method_tags")
+      .select("id,name");
+
+  if (checkError) {
+    console.error("解法タグ確認エラー:", checkError);
+
+    methodTagAddStatus.textContent =
+      "解法タグの確認に失敗しました。";
+    return;
+  }
+
+  // 同名タグの重複を防止
+  const isDuplicate = existingTags.some(
+    tag => tag.name === newTagName
+  );
+
+  if (isDuplicate) {
+    methodTagAddStatus.textContent =
+      "同じ名前の解法タグが既に登録されています。";
+    return;
+  }
+
+  // 新しい解法タグをSupabaseに登録
+addMethodTagButton.disabled = true;
+
+methodTagAddStatus.textContent =
+  "解法タグを登録しています...";
+
+const { data: newTag, error: insertError } =
+  await client
+    .from("math_method_tags")
+    .insert({
+      name: newTagName
+    })
+    .select("id,name")
+    .single();
+
+if (insertError) {
+  console.error(
+    "解法タグ登録エラー:",
+    insertError
+  );
+
+  methodTagAddStatus.textContent =
+    "解法タグの登録に失敗しました。";
+} else {
+  newMethodTagInput.value = "";
+
+  // 解法タグ一覧を再取得して画面を更新
+  await loadProblemInfoList();
+}
+
+addMethodTagButton.disabled = false;
+});
+
+  // 解法タグの検索欄を取得
+const methodTagSearch =
+  document.getElementById("method-tag-search");
+
+// 入力された文字で解法タグを絞り込む
+methodTagSearch.addEventListener("input", () => {
+  const keyword =
+    methodTagSearch.value.trim().toLowerCase();
+
+  const tagLabels =
+    methodTagsArea.querySelectorAll("label");
+
+  tagLabels.forEach(label => {
+    const tagName =
+      label.textContent.toLowerCase();
+
+    label.style.display =
+      tagName.includes(keyword)
+        ? "block"
+        : "none";
+  });
+});
 
 // 現在の大問に保存された解法タグを取得
 const { data: selectedMethodTags, error: selectedMethodTagsError } =
@@ -2547,6 +2676,21 @@ if (methodTagsError) {
     methodTagsArea.textContent =
       "登録済みの解法タグがありません。";
   } else {
+
+　　methodTags.sort((a, b) => {
+  const aSelected =
+    selectedMethodTagIds.has(a.id);
+
+  const bSelected =
+    selectedMethodTagIds.has(b.id);
+
+  if (aSelected === bSelected) {
+    return 0;
+  }
+
+  return aSelected ? -1 : 1;
+});
+    
     methodTags.forEach(tag => {
       const label = document.createElement("label");
 
