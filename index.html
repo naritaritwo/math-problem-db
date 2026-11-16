@@ -2529,6 +2529,30 @@ editor.innerHTML =
 const relatedFieldsArea =
   document.getElementById("problem-related-fields");
 
+// 現在の大問に登録済みの関連分野を取得
+const {
+  data: selectedRelatedFields,
+  error: selectedRelatedFieldsError
+} = await client
+  .from("math_problem_related_fields")
+  .select("field_id")
+  .eq("problem_id", selectedProblem.id);
+
+if (selectedRelatedFieldsError) {
+  console.error(
+    "関連分野の取得エラー:",
+    selectedRelatedFieldsError
+  );
+}
+
+// 保存済みの関連分野IDを保持
+const selectedRelatedFieldIds = new Set(
+  (selectedRelatedFields || []).map(
+    item => item.field_id
+  )
+);
+  
+  
 // 数学の分野一覧を取得
 const { data: relatedFields, error: relatedFieldsError } =
   await client
@@ -2623,29 +2647,6 @@ checkbox.addEventListener("change", async () => {
 const methodTagsArea =
   document.getElementById("problem-method-tags");
 
-// 現在の大問に登録済みの関連分野を取得
-const {
-  data: selectedRelatedFields,
-  error: selectedRelatedFieldsError
-} = await client
-  .from("math_problem_related_fields")
-  .select("field_id")
-  .eq("problem_id", selectedProblem.id);
-
-if (selectedRelatedFieldsError) {
-  console.error(
-    "関連分野の取得エラー:",
-    selectedRelatedFieldsError
-  );
-}
-
-// 保存済みの関連分野IDを保持
-const selectedRelatedFieldIds = new Set(
-  (selectedRelatedFields || []).map(
-    item => item.field_id
-  )
-);
-  
   // 新しい解法タグの入力欄
 const newMethodTagInput =
   document.getElementById("new-method-tag-name");
