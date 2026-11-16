@@ -2507,9 +2507,33 @@ editor.innerHTML =
 
 "</div>";
   const primaryFieldSelect =
-  document.getElementById(
-    "problem-primary-field"
-  );
+  　document.getElementById("problem-primary-field");
+　　// 主分野の変更に合わせて関連分野の選択制限を更新
+primaryFieldSelect.addEventListener("change", () => {
+  const primaryFieldId = primaryFieldSelect.value;
+
+  relatedFieldsArea.querySelectorAll("label").forEach(label => {
+    const checkbox = label.querySelector("input[type='checkbox']");
+    if (!checkbox) return;
+
+    const isPrimary = checkbox.value === primaryFieldId;
+
+　　　// 新しい主分野が関連分野に登録済みなら解除する
+if (isPrimary && checkbox.checked) {
+  checkbox.checked = false;
+
+  // 既存の解除処理を呼び出す
+  checkbox.dispatchEvent(new Event("change"));
+}
+    
+    checkbox.disabled = isPrimary;
+    label.style.opacity = isPrimary ? "0.5" : "1";
+    label.title = isPrimary
+      ? "主分野に設定されているため選択できません"
+      : "";
+  });
+});
+  
   const middleCategorySelect =
   document.getElementById("problem-middle-category");
 
@@ -2583,6 +2607,13 @@ if (relatedFieldsError) {
     checkbox.value = field.id;
     checkbox.checked = selectedRelatedFieldIds.has(field.id);
     checkbox.style.marginRight = "8px";
+
+    // 主分野と同じ分野は選択できないようにする
+if (field.id === selectedProblem.primary_field_id) {
+  checkbox.disabled = true;
+  label.style.opacity = "0.5";
+  label.title = "主分野に設定されているため選択できません";
+}
 
 checkbox.addEventListener("change", async () => {
   if (!checkbox.checked) {
