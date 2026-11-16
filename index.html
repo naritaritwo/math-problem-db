@@ -2469,6 +2469,12 @@ editor.innerHTML =
 "</p>" +
 
 "<div style='margin-top:20px;'>" +
+"<label><strong>関連分野（複数選択可）</strong></label>" +
+"<div id='problem-related-fields' " +
+"style='margin-top:8px;'>" +
+"<p>関連分野を読み込んでいます...</p>" +
+"</div>" +
+"</div>" +  
 "<label><strong>解法タグ（複数選択可）</strong></label>" +
 
 "<input id='method-tag-search' " +
@@ -2519,10 +2525,127 @@ editor.innerHTML =
   const baselineMinutesInput =
   document.getElementById("problem-baseline-minutes");
 
-　// 解法タグの表示領域を取得
+// 関連分野の表示領域を取得
+const relatedFieldsArea =
+  document.getElementById("problem-related-fields");
+
+// 数学の分野一覧を取得
+const { data: relatedFields, error: relatedFieldsError } =
+  await client
+    .from("math_fields")
+    .select("id,name")
+    .order("name", { ascending: true });
+
+if (relatedFieldsError) {
+  console.error(
+    "関連分野取得エラー:",
+    relatedFieldsError
+  );
+
+  relatedFieldsArea.textContent =
+    "関連分野を読み込めませんでした。";
+} else {
+  relatedFieldsArea.innerHTML = "";
+
+  relatedFields.forEach(field => {
+    const label = document.createElement("label");
+
+    label.style.display = "block";
+    label.style.marginBottom = "8px";
+    label.style.cursor = "pointer";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.value = field.id;
+    checkbox.checked = selectedRelatedFieldIds.has(field.id);
+    checkbox.style.marginRight = "8px";
+
+checkbox.addEventListener("change", async () => {
+  if (!checkbox.checked) {
+    checkbox.disabled = true;
+
+    const { error: deleteError } = await client
+      .from("math_problem_related_fields")
+      .delete()
+      .eq("problem_id", selectedProblem.id)
+      .eq("field_id", field.id);
+
+    if (deleteError) {
+      console.error(
+        "関連分野解除エラー:",
+        deleteError
+      );
+
+      checkbox.checked = true;
+      alert("関連分野を解除できませんでした。");
+    } else {
+      selectedRelatedFieldIds.delete(field.id);
+    }
+
+    checkbox.disabled = false;
+    return;
+  }
+
+  checkbox.disabled = true;
+
+  const { error: insertError } = await client
+    .from("math_problem_related_fields")
+    .insert({
+      problem_id: selectedProblem.id,
+      field_id: field.id
+    });
+
+  if (insertError) {
+    console.error(
+      "関連分野保存エラー:",
+      insertError
+    );
+
+    checkbox.checked = false;
+    alert("関連分野を保存できませんでした。");
+  } else {
+    selectedRelatedFieldIds.add(field.id);
+  }
+
+  checkbox.disabled = false;
+});
+    
+    label.appendChild(checkbox);
+    label.appendChild(
+      document.createTextNode(field.name)
+    );
+
+    relatedFieldsArea.appendChild(label);
+  });
+}
+
+  // 解法タグの表示領域を取得
 const methodTagsArea =
   document.getElementById("problem-method-tags");
 
+// 現在の大問に登録済みの関連分野を取得
+const {
+  data: selectedRelatedFields,
+  error: selectedRelatedFieldsError
+} = await client
+  .from("math_problem_related_fields")
+  .select("field_id")
+  .eq("problem_id", selectedProblem.id);
+
+if (selectedRelatedFieldsError) {
+  console.error(
+    "関連分野の取得エラー:",
+    selectedRelatedFieldsError
+  );
+}
+
+// 保存済みの関連分野IDを保持
+const selectedRelatedFieldIds = new Set(
+  (selectedRelatedFields || []).map(
+    item => item.field_id
+  )
+);
+  
   // 新しい解法タグの入力欄
 const newMethodTagInput =
   document.getElementById("new-method-tag-name");
