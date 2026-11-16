@@ -1124,6 +1124,46 @@
 </div>
     
   </div>
+
+ <div style="margin-top:24px; text-align:right;">
+  <button
+    type="button"
+    id="register-step-4-next-button"
+    class="primary-button"
+  >
+    ⑤ 確認・登録へ
+  </button>
+</div>
+ 
+ </section>
+
+<!-- ⑤ 確認・登録 -->
+<section
+  id="register-step-5"
+  style="display:none;"
+>
+  <h2>⑤ 確認・登録</h2>
+
+  <p>
+    登録内容を確認し、問題セットを登録します。
+  </p>
+
+  <div
+    id="register-step-5-summary"
+    class="card"
+  >
+    <p>登録内容を読み込んでいます...</p>
+  </div>
+
+<div style="margin-top:24px;">
+  <button
+    type="button"
+    id="register-step-5-back-button"
+  >
+    ④ 大問情報へ戻る
+  </button>
+</div>
+  
 </section>
   
 </section>
@@ -4204,6 +4244,54 @@ registerStep3NextButton.addEventListener(
     window.scrollTo(0, 0);
   }
 );
+
+// ④ 大問情報 → ⑤ 確認・登録
+const registerStep4NextButton =
+  document.getElementById("register-step-4-next-button");
+
+registerStep4NextButton.addEventListener(
+  "click",
+  () => {
+    // ④を非表示
+    document.getElementById(
+      "register-step-4"
+    ).style.display = "none";
+
+    // ⑤を表示
+    document.getElementById(
+      "register-step-5"
+    ).style.display = "block";
+
+    // ページの先頭へ移動
+    window.scrollTo(0, 0);
+  }
+);
+
+// ⑤ 確認・登録 → ④ 大問情報
+const registerStep5BackButton =
+  document.getElementById("register-step-5-back-button");
+
+registerStep5BackButton.addEventListener(
+  "click",
+  async () => {
+    // ⑤を非表示
+    document.getElementById(
+      "register-step-5"
+    ).style.display = "none";
+
+    // ④を表示
+    document.getElementById(
+      "register-step-4"
+    ).style.display = "block";
+
+    // 大問情報を再読み込み
+    await loadProblemInfoList();
+
+    // ページの先頭へ移動
+    window.scrollTo(0, 0);
+  }
+);
+    
     /* ===== 問題登録：問題資料ファイル選択 ===== */
 
 const problemSourceFileInput =
