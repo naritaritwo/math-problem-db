@@ -1958,12 +1958,26 @@ const { data: draftData, error: draftError } =
   await client
     .from("math_problem_sets")
     .select(`
-      id,
-      set_code,
-      year,
-      source_type,
-      created_at
-    `)
+ 　　 id,
+  　　set_code,
+ 　　 year,
+　　  source_type,
+ 　　 exam_time_minutes,
+ 　　 math_total_score,
+ 　　 notes,
+ 　　 created_at,
+ 　　 university_details:math_university_exam_details (
+   　　 university_id,
+   　　 admission_type,
+   　　 admission_other_name,
+  　　  humanities_science_type,
+   　　     target_scope
+ 　　 ),
+ 　　 target_details:math_problem_set_targets (
+   　　 faculty_id,
+  　　  department_id
+　　  )
+　　`)
     .eq("status", "draft")
     .is("deleted_at", null)
     .order("created_at", { ascending: false })
@@ -2005,9 +2019,86 @@ const resumeDraftButton =
 
 resumeDraftButton.addEventListener(
   "click",
-  () => {
+  async () => {
     currentProblemSetId = draftData.id;
 
+　　// 下書きの問題セット基本情報を①の入力欄に復元
+document.getElementById("register-source-type").value =
+  draftData.source_type || "";
+
+document.getElementById("register-year").value =
+  draftData.year ?? "";
+
+document.getElementById("register-time").value =
+  draftData.exam_time_minutes ?? "";
+
+document.getElementById("register-score").value =
+  draftData.math_total_score ?? "";
+
+document.getElementById("register-notes").value =
+  draftData.notes || "";
+
+// 出題種別に応じた表示切り替え処理を実行
+document.getElementById("register-source-type")
+  .dispatchEvent(new Event("change"));
+
+　　// 大学入試の詳細情報を①の入力欄に復元
+const universityDetail = Array.isArray(draftData.university_details)
+  ? draftData.university_details[0]
+  : draftData.university_details;
+
+if (draftData.source_type === "大学入試" && universityDetail) {
+
+  // 大学一覧の読み込み完了後に保存済みの大学を選択
+　await loadUniversities();
+
+　document.getElementById("register-university").value =
+ 　 universityDetail.university_id || "";
+
+  document.getElementById("register-admission-type").value =
+    universityDetail.admission_type || "";
+
+  document.getElementById("register-admission-other").value =
+    universityDetail.admission_other_name || "";
+
+  document.getElementById("register-humanities-science-type").value =
+    universityDetail.humanities_science_type || "";
+
+  document.getElementById("register-target-scope").value =
+    universityDetail.target_scope || "";
+
+　// 保存済みの入試区分・対象範囲に応じて入力欄の表示を更新
+updateAdmissionFields();
+updateTargetFields();
+  
+// 保存済みの対象学部・学科を復元
+const savedTargets = draftData.target_details || [];
+
+// ①の入力欄は単一選択なので、最初の対象を復元
+const savedTarget = savedTargets[0];
+
+if (
+  universityDetail.target_scope === "対象指定" &&
+  savedTarget
+) {
+
+  // 選択済みの大学に対応する学部一覧を読み込む
+  await loadFaculties();
+
+  // 保存済みの学部を選択
+  document.getElementById("register-faculty").value =
+    savedTarget.faculty_id || "";
+
+  // 選択済みの学部に対応する学科一覧を読み込む
+  await loadDepartments();
+
+  // 保存済みの学科を選択
+  document.getElementById("register-department").value =
+    savedTarget.department_id || "";
+}
+  
+}
+    
     document.querySelectorAll(".page")
       .forEach(page => {
         page.classList.remove("active");
@@ -5564,13 +5655,21 @@ if (sourceType === "大学入試") {
     registerNextButton.textContent = "保存中...";
 
 
-    const { data, error } = await client
-      .from("math_problem_sets")
-      .insert(problemSetData)
-      .select("id, set_code")
-      .single();
+   // 既存の問題セットがあれば更新、なければ新規作成
+let saveQuery = client.from("math_problem_sets");
 
+if (currentProblemSetId) {
+  saveQuery = saveQuery
+    .update(problemSetData)
+    .eq("id", currentProblemSetId);
+} else {
+  saveQuery = saveQuery
+    .insert(problemSetData);
+}
 
+const { data, error } = await saveQuery
+  .select("id, set_code")
+  .single();
     registerNextButton.disabled = false;
     registerNextButton.textContent = "次へ";
 
@@ -5656,7 +5755,7 @@ if (sourceType === "大学入試") {
   const { error: universityDetailError } =
     await client
       .from("math_university_exam_details")
-      .insert({
+      .upsert({
         problem_set_id: data.id,
         university_id: universityId,
         admission_type: admissionType,
@@ -5667,7 +5766,7 @@ if (sourceType === "大学入試") {
         humanities_science_type:
           humanitiesScienceType || null,
         target_scope: targetScope
-      });
+      }, { onConflict: "problem_set_id" });
 
 
   if (universityDetailError) {
@@ -5696,17 +5795,75 @@ const facultyIdForSave =
 
 const departmentIdForSave =
   document.getElementById("register-department").value;
+
+　// この問題セットに登録済みの対象情報を確認
+const { data: existingTargets, error: existingTargetsError } =
+  await client
+    .from("math_problem_set_targets")
+    .select("id, faculty_id, department_id")
+    .eq("problem_set_id", data.id);
+
+if (existingTargetsError) {
+  console.error(
+    "対象学部・学科情報の取得エラー:",
+    existingTargetsError
+  );
+
+  alert(
+    "登録済みの対象学部・学科情報を確認できませんでした。\n" +
+    existingTargetsError.message
+  );
+
+  return;
+}
   
   if (targetScopeForSave === "対象指定") {
 
-  const { error: targetError } =
-    await client
+  // 同じ学部・学科がすでに登録されているか確認
+const targetAlreadyExists = existingTargets.some(target =>
+  target.faculty_id === facultyIdForSave &&
+  (target.department_id || null) === (departmentIdForSave || null)
+);
+
+let targetError = null;
+
+// 対象が変更された場合は、既存の対象情報を置き換える
+if (!targetAlreadyExists) {
+
+  // 新しい対象を先に登録する
+  const { error: insertError } = await client
+    .from("math_problem_set_targets")
+    .insert({
+      problem_set_id: data.id,
+      faculty_id: facultyIdForSave,
+      department_id: departmentIdForSave || null
+    });
+
+  targetError = insertError;
+}
+
+// 新しい対象が登録済み、または登録に成功した場合
+if (!targetError) {
+
+  // 現在選択されていない古い対象だけを削除する
+  const oldTargetIds = existingTargets
+    .filter(target =>
+      target.faculty_id !== facultyIdForSave ||
+      (target.department_id || null) !==
+        (departmentIdForSave || null)
+    )
+    .map(target => target.id);
+
+  if (oldTargetIds.length > 0) {
+    const { error: deleteError } = await client
       .from("math_problem_set_targets")
-      .insert({
-        problem_set_id: data.id,
-        faculty_id: facultyIdForSave,
-        department_id: departmentIdForSave || null
-      });
+      .delete()
+      .eq("problem_set_id", data.id)
+      .in("id", oldTargetIds);
+
+    targetError = deleteError;
+  }
+}
 
   if (targetError) {
 
@@ -5722,6 +5879,32 @@ const departmentIdForSave =
     );
 
     return;
+  }
+
+} else {
+
+  // 「対象指定」以外に変更した場合、古い対象情報を削除する
+  if (existingTargets.length > 0) {
+
+    const { error: clearTargetsError } = await client
+      .from("math_problem_set_targets")
+      .delete()
+      .eq("problem_set_id", data.id);
+
+    if (clearTargetsError) {
+      console.error(
+        "対象学部・学科の削除エラー:",
+        clearTargetsError
+      );
+
+      alert(
+        "対象範囲は保存されましたが、" +
+        "以前の対象学部・学科を削除できませんでした。\n" +
+        clearTargetsError.message
+      );
+
+      return;
+    }
   }
 }
 
