@@ -2067,19 +2067,21 @@ console.log("⑤ 対象学部・学科:", targetNames);
 const { data: problems, error: problemsError } =
   await client
     .from("math_problems")
-    .select(`
-      id,
-      problem_code,
-      order_no,
-      original_label,
-      primary_field_id,
-      middle_category_id,
-      difficulty_level,
-      score,
-      score_source,
-      baseline_minutes,
-      needs_review
-    `)
+　　.select(`
+　　  id,
+ 　　 problem_code,
+ 　　 order_no,
+ 　　 original_label,
+  　　primary_field_id,
+ 　　 middle_category_id,
+ 　　 primary_field:math_fields!primary_field_id(name),
+ 　　 middle_category:math_middle_categories!middle_category_id(name),
+ 　　 difficulty_level,
+ 　　 score,
+ 　　 score_source,
+ 　　 baseline_minutes,
+　　  needs_review
+　　`)
     .eq("problem_set_id", currentProblemSetId)
     .is("deleted_at", null)
     .order("order_no", { ascending: true });
@@ -2163,6 +2165,8 @@ if (!problems || problems.length === 0) {
 
     const fields = [
       ["問題コード", problem.problem_code],
+      ["難易度", problem.difficulty_level],
+      ["中分類", problem.middle_category?.name],
       ["難易度", problem.difficulty_level],
       ["配点", problem.score == null ? null : `${problem.score}点`],
       ["配点の出典", problem.score_source],
