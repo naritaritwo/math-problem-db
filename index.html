@@ -1136,7 +1136,16 @@
     
   </div>
 
-<div style="margin-top:24px; margin-bottom:16px;">
+<!-- ④ 大問情報：操作ボタン -->
+<div style="
+  margin-top:24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+">
+
   <button
     type="button"
     id="register-step-4-back-button"
@@ -1144,9 +1153,7 @@
   >
     ③ 大問分割へ戻る
   </button>
-</div>
-   
- <div style="margin-top:24px; text-align:right;">
+
   <button
     type="button"
     id="register-step-4-next-button"
@@ -1154,6 +1161,7 @@
   >
     ⑤ 確認・登録へ
   </button>
+
 </div>
  
  </section>
@@ -1176,22 +1184,33 @@
     <p>登録内容を読み込んでいます...</p>
   </div>
 
-<!-- 最終登録ボタン -->
-<button
-  type="button"
-  id="register-final-submit-btn"
-  disabled
->
-  登録を完了する
-</button>
-  
-<div style="margin-top:24px;">
+<!-- ⑤ 確認・登録：操作ボタン -->
+<div style="
+  margin-top:24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+">
+
   <button
     type="button"
     id="register-step-5-back-button"
+    class="secondary-button"
   >
     ④ 大問情報へ戻る
   </button>
+
+  <button
+    type="button"
+    id="register-final-submit-btn"
+    class="primary-button"
+    disabled
+  >
+    登録を完了する
+  </button>
+
 </div>
   
 </section>
