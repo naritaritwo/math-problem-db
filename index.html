@@ -4465,7 +4465,11 @@ imageWrapper.className =
 
 imageWrapper.style.position = "relative";
 imageWrapper.style.display = "inline-block";
-imageWrapper.style.maxWidth = "100%";
+
+imageWrapper.style.maxWidth =
+  document.getElementById("split-file-role").value === "solution"
+    ? "50%"
+    : "100%";
 
 const image =
   document.createElement("img");
@@ -4474,6 +4478,7 @@ image.src = signedData.signedUrl;
 image.alt = file.original_filename;
 
 image.style.display = "block";
+image.style.width = "100%";
 image.style.maxWidth = "100%";
 image.style.height = "auto";
 
