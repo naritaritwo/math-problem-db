@@ -2577,8 +2577,6 @@ if (
 }
 
 summaryArea.appendChild(scoreSummary);
-  
-}
 
 // 確認画面の読み込み完了後に登録ボタンを設定
 const finalSubmitButton = document.getElementById(
@@ -2595,6 +2593,9 @@ if (problemSet.status === "registered") {
   finalSubmitButton.disabled = true;
   finalSubmitButton.textContent = "登録できません";
 } 
+
+} // loadRegistrationSummary() の終了
+    
 　　/* ===== 問題登録：大問一覧読み込み ===== */
 
 async function loadMajorProblems() {
