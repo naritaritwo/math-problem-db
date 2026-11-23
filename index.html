@@ -2960,10 +2960,11 @@ if (regionsError) {
     await client
       .from("math_source_files")
       .select(`
-        id,
-        storage_path,
-        original_filename
-      `)
+  　　　id,
+ 　　　 file_role,
+  　　　storage_path,
+ 　　　 original_filename
+　　　`)
       .in(
         "id",
         sourceFileIds
@@ -3013,7 +3014,10 @@ for (const sourceFile of sourceFiles) {
 
   cropContainer.style.position = "relative";
   cropContainer.style.width = "100%";
-  cropContainer.style.maxWidth = "900px";
+  cropContainer.style.maxWidth =
+  sourceFile.file_role === "solution"
+    ? "450px"
+    : "900px";
   cropContainer.style.margin = "0 auto 16px";
   cropContainer.style.overflow = "hidden";
   cropContainer.style.border = "1px solid #ddd";
