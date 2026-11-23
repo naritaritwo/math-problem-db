@@ -2062,6 +2062,36 @@ const targetNames = (targetData || []).map(item => {
 });
 
 console.log("⑤ 対象学部・学科:", targetNames);
+
+// 現在の問題セットに含まれる大問を取得
+const { data: problems, error: problemsError } =
+  await client
+    .from("math_problems")
+    .select(`
+      id,
+      problem_code,
+      order_no,
+      original_label,
+      primary_field_id,
+      middle_category_id,
+      difficulty_level,
+      score,
+      score_source,
+      baseline_minutes,
+      needs_review
+    `)
+    .eq("problem_set_id", currentProblemSetId)
+    .is("deleted_at", null)
+    .order("order_no", { ascending: true });
+
+if (problemsError) {
+  console.error(
+    "⑤ 大問情報の取得エラー:",
+    problemsError
+  );
+}
+
+console.log("⑤ 確認・登録：大問一覧", problems);
   
 　// 問題セットの基本情報を表示
 const basicInfo = document.createElement("div");
@@ -2103,6 +2133,87 @@ fields.forEach(([label, value]) => {
 });
 
 summaryArea.replaceChildren(basicInfo);
+
+// 大問一覧の表示
+const problemsSection = document.createElement("div");
+problemsSection.style.marginTop = "24px";
+
+const problemsTitle = document.createElement("h3");
+problemsTitle.textContent = "大問一覧";
+problemsSection.appendChild(problemsTitle);
+
+if (!problems || problems.length === 0) {
+  const message = document.createElement("p");
+  message.textContent = problemsError
+    ? "大問情報の取得に失敗しました。"
+    : "登録されている大問はありません。";
+  problemsSection.appendChild(message);
+} else {
+  problems.forEach(problem => {
+    const card = document.createElement("div");
+
+    card.style.border = "1px solid #ccc";
+    card.style.borderRadius = "8px";
+    card.style.padding = "12px";
+    card.style.marginBottom = "12px";
+
+    const heading = document.createElement("h4");
+    heading.textContent = `第${problem.order_no}問`;
+    card.appendChild(heading);
+
+    const fields = [
+      ["問題コード", problem.problem_code],
+      ["難易度", problem.difficulty_level],
+      ["配点", problem.score == null ? null : `${problem.score}点`],
+      ["配点の出典", problem.score_source],
+      ["基準解答時間", problem.baseline_minutes == null
+        ? null : `${problem.baseline_minutes}分`]
+    ];
+
+    fields.forEach(([label, value]) => {
+      const p = document.createElement("p");
+      p.textContent = `${label}：${value ?? "未設定"}`;
+      card.appendChild(p);
+    });
+
+    problemsSection.appendChild(card);
+  });
+}
+
+summaryArea.appendChild(problemsSection);
+
+// 大問の配点合計を計算
+const totalProblemScore = (problems || []).reduce(
+  (sum, problem) => sum + (Number(problem.score) || 0),
+  0
+);
+
+// 配点合計を表示
+const scoreSummary = document.createElement("div");
+scoreSummary.style.marginTop = "16px";
+
+const scoreTotalText = document.createElement("p");
+scoreTotalText.style.fontWeight = "bold";
+scoreTotalText.textContent =
+  `大問の配点合計：${totalProblemScore}点`;
+
+scoreSummary.appendChild(scoreTotalText);
+
+// 数学の満点と比較
+if (!problemsError && problemSet.math_total_score != null) {
+  const mathTotalScore = Number(problemSet.math_total_score);
+
+  if (totalProblemScore !== mathTotalScore) {
+    const warning = document.createElement("p");
+    warning.style.color = "#c0392b";
+    warning.textContent =
+      `⚠ 数学の満点（${mathTotalScore}点）と大問の配点合計（${totalProblemScore}点）が一致していません。`;
+
+    scoreSummary.appendChild(warning);
+  }
+}
+
+summaryArea.appendChild(scoreSummary);
   
 }
     
