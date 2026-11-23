@@ -2119,6 +2119,92 @@ if (middleCategoryError) {
 }
 
 console.log("⑤ 中分類マスタ:", middleCategoryMaster);
+
+// 各大問の関連分野を取得
+const problemIds = (problems || []).map(problem => problem.id);
+
+let relatedFields = [];
+
+if (problemIds.length > 0) {
+  const { data, error } = await client
+    .from("math_problem_related_fields")
+    .select("problem_id, field_id")
+    .in("problem_id", problemIds);
+
+  if (error) {
+    console.error("⑤ 関連分野の取得エラー:", error);
+  } else {
+    relatedFields = data || [];
+  }
+}
+
+console.log("⑤ 関連分野:", relatedFields);
+
+// 各大問の内容タグを取得
+let problemContentTags = [];
+
+if (problemIds.length > 0) {
+  const { data, error } = await client
+    .from("math_problem_content_tags")
+    .select("problem_id, content_tag_id")
+    .in("problem_id", problemIds);
+
+  if (error) {
+    console.error("⑤ 内容タグの取得エラー:", error);
+  } else {
+    problemContentTags = data || [];
+  }
+}
+
+console.log("⑤ 内容タグ:", problemContentTags);
+
+// 内容タグマスタを取得
+const { data: contentTagMaster, error: contentTagMasterError } =
+  await client
+    .from("math_content_tags")
+    .select("id, name");
+
+if (contentTagMasterError) {
+  console.error(
+    "⑤ 内容タグマスタの取得エラー:",
+    contentTagMasterError
+  );
+}
+
+console.log("⑤ 内容タグマスタ:", contentTagMaster);
+
+// 各大問の解法タグを取得
+let problemMethodTags = [];
+
+if (problemIds.length > 0) {
+  const { data, error } = await client
+    .from("math_problem_method_tags")
+    .select("problem_id, method_tag_id")
+    .in("problem_id", problemIds);
+
+  if (error) {
+    console.error("⑤ 解法タグの取得エラー:", error);
+  } else {
+    problemMethodTags = data || [];
+  }
+}
+
+console.log("⑤ 解法タグ:", problemMethodTags);
+
+// 解法タグマスタを取得
+const { data: methodTagMaster, error: methodTagMasterError } =
+  await client
+    .from("math_method_tags")
+    .select("id, name");
+
+if (methodTagMasterError) {
+  console.error(
+    "⑤ 解法タグマスタの取得エラー:",
+    methodTagMasterError
+  );
+}
+
+console.log("⑤ 解法タグマスタ:", methodTagMaster);
   
 　// 問題セットの基本情報を表示
 const basicInfo = document.createElement("div");
@@ -2196,6 +2282,27 @@ if (!problems || problems.length === 0) {
       ["中分類", middleCategoryMaster?.find(
 　　　  category => category.id === problem.middle_category_id
       )?.name],
+      ["関連分野", relatedFields
+ 　　 .filter(item => item.problem_id === problem.id)
+ 　　 .map(item => fieldMaster?.find(
+  　　  field => field.id === item.field_id
+    )?.name)
+ 　　 .filter(Boolean)
+ 　　 .join("、") || "なし"],
+      ["内容タグ", problemContentTags
+  　　.filter(item => item.problem_id === problem.id)
+ 　　 .map(item => contentTagMaster?.find(
+　　   tag => tag.id === item.content_tag_id
+    )?.name)
+ 　　 .filter(Boolean)
+ 　　 .join("、") || "なし"],
+      ["解法タグ", problemMethodTags
+  　　.filter(item => item.problem_id === problem.id)
+ 　　 .map(item => methodTagMaster?.find(
+ 　　   tag => tag.id === item.method_tag_id
+    )?.name)
+  　　.filter(Boolean)
+ 　　 .join("、") || "なし"],
       ["難易度", problem.difficulty_level],
       ["配点", problem.score == null ? null : `${problem.score}点`],
       ["配点の出典", problem.score_source],
