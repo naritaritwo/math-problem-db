@@ -1949,7 +1949,66 @@ resumeDraftButton.addEventListener(
     let currentProblemSetId = null;
 　　let currentProblemId = null;
 　　let pendingProblemRegion = null;
+　　
+　　/* ===== ⑤ 確認・登録：基本情報の読み込み ===== */
 
+async function loadRegistrationSummary() {
+  const summaryArea =
+    document.getElementById("register-step-5-summary");
+
+  if (!currentProblemSetId) {
+    summaryArea.textContent =
+      "編集中の問題セットが見つかりません。";
+    return;
+  }
+
+  summaryArea.textContent =
+    "問題セット情報を取得しています...";
+    // 現在編集中の問題セットを取得
+  const { data: problemSet, error: problemSetError } =
+    await client
+      .from("math_problem_sets")
+      .select("*")
+      .eq("id", currentProblemSetId)
+      .single();
+
+  if (problemSetError) {
+    console.error(
+      "問題セット情報の取得エラー:",
+      problemSetError
+    );
+
+    summaryArea.textContent =
+      "問題セット情報の取得に失敗しました。";
+    return;
+  }
+
+  console.log("⑤ 確認・登録：問題セット情報", problemSet);
+
+　// 問題セットの基本情報を表示
+const basicInfo = document.createElement("div");
+
+const title = document.createElement("h3");
+title.textContent = "問題セットの基本情報";
+basicInfo.appendChild(title);
+
+const fields = [
+  ["問題セット番号", problemSet.set_code],
+  ["年度", problemSet.year],
+  ["入試区分", problemSet.source_type],
+  ["登録状態", problemSet.status]
+];
+
+fields.forEach(([label, value]) => {
+  const p = document.createElement("p");
+  p.textContent = `${label}：${value ?? "未設定"}`;
+  basicInfo.appendChild(p);
+});
+
+summaryArea.replaceChildren(basicInfo);
+  
+}
+    
 　　/* ===== 問題登録：大問一覧読み込み ===== */
 
 async function loadMajorProblems() {
@@ -4251,7 +4310,7 @@ const registerStep4NextButton =
 
 registerStep4NextButton.addEventListener(
   "click",
-  () => {
+  async () => {
     // ④を非表示
     document.getElementById(
       "register-step-4"
@@ -4261,7 +4320,10 @@ registerStep4NextButton.addEventListener(
     document.getElementById(
       "register-step-5"
     ).style.display = "block";
-
+    
+　　// ⑤の登録内容を読み込む
+    await loadRegistrationSummary();
+    
     // ページの先頭へ移動
     window.scrollTo(0, 0);
   }
