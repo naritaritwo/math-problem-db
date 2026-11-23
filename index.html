@@ -2074,8 +2074,6 @@ const { data: problems, error: problemsError } =
  　　 original_label,
   　　primary_field_id,
  　　 middle_category_id,
- 　　 primary_field:math_fields!primary_field_id(name),
- 　　 middle_category:math_middle_categories!middle_category_id(name),
  　　 difficulty_level,
  　　 score,
  　　 score_source,
@@ -2094,6 +2092,33 @@ if (problemsError) {
 }
 
 console.log("⑤ 確認・登録：大問一覧", problems);
+
+　// 主分野マスタを取得
+const { data: fieldMaster, error: fieldMasterError } =
+  await client
+    .from("math_fields")
+    .select("id, name");
+
+if (fieldMasterError) {
+  console.error("⑤ 主分野マスタの取得エラー:", fieldMasterError);
+}
+
+console.log("⑤ 主分野マスタ:", fieldMaster);
+
+// 中分類マスタを取得
+const { data: middleCategoryMaster, error: middleCategoryError } =
+  await client
+    .from("math_middle_categories")
+    .select("id, name");
+
+if (middleCategoryError) {
+  console.error(
+    "⑤ 中分類マスタの取得エラー:",
+    middleCategoryError
+  );
+}
+
+console.log("⑤ 中分類マスタ:", middleCategoryMaster);
   
 　// 問題セットの基本情報を表示
 const basicInfo = document.createElement("div");
@@ -2165,8 +2190,12 @@ if (!problems || problems.length === 0) {
 
     const fields = [
       ["問題コード", problem.problem_code],
-      ["難易度", problem.difficulty_level],
-      ["中分類", problem.middle_category?.name],
+      ["主分野", fieldMaster?.find(
+　　　  field => field.id === problem.primary_field_id
+      )?.name],
+      ["中分類", middleCategoryMaster?.find(
+　　　  category => category.id === problem.middle_category_id
+      )?.name],
       ["難易度", problem.difficulty_level],
       ["配点", problem.score == null ? null : `${problem.score}点`],
       ["配点の出典", problem.score_source],
