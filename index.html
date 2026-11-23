@@ -1988,7 +1988,7 @@ async function loadRegistrationSummary() {
   // 大学入試の詳細情報を取得
 let universityExamDetail = null;
 
-if (problemSet.source_type === "university") {
+if (problemSet.source_type === "大学入試") {
   const { data, error } = await client
     .from("math_university_exam_details")
     .select("*")
