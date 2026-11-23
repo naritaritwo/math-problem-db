@@ -1155,6 +1155,15 @@
     <p>登録内容を読み込んでいます...</p>
   </div>
 
+<!-- 最終登録ボタン -->
+<button
+  type="button"
+  id="register-final-submit-btn"
+  disabled
+>
+  登録を完了する
+</button>
+  
 <div style="margin-top:24px;">
   <button
     type="button"
@@ -1949,10 +1958,94 @@ resumeDraftButton.addEventListener(
     let currentProblemSetId = null;
 　　let currentProblemId = null;
 　　let pendingProblemRegion = null;
+    let registrationWarnings = [];
 　　
 　　/* ===== ⑤ 確認・登録：基本情報の読み込み ===== */
 
+// ⑤ 最終登録ボタンのクリック処理
+document.getElementById("register-final-submit-btn")
+  .addEventListener("click", async () => {
+
+    if (!currentProblemSetId) {
+      alert("登録対象の問題セットが見つかりません。");
+      return;
+    }
+
+    // 登録前の確認メッセージを作成
+let confirmMessage = "この問題セットの登録を完了しますか？\n\n";
+
+if (registrationWarnings.length > 0) {
+  confirmMessage += "【確認が必要な項目】\n";
+  confirmMessage += registrationWarnings
+    .map(warning => `・${warning}`)
+    .join("\n");
+
+  confirmMessage +=
+    "\n\n警告がありますが、このまま登録できます。";
+} else {
+  confirmMessage += "確認が必要な項目はありません。";
+}
+
+confirmMessage += "\n\n登録後も内容を編集できます。";
+
+const confirmed = confirm(confirmMessage);
+
+    if (!confirmed) {
+      return;
+    }
+
+    console.log(
+      "⑤ 最終登録の確認完了:",
+      currentProblemSetId
+    );
+
+// 登録処理中の連続クリックを防止
+const submitButton = document.getElementById(
+  "register-final-submit-btn"
+);
+
+submitButton.disabled = true;
+submitButton.textContent = "登録処理中...";
+    
+　　// 問題セットの登録状態を更新
+const { error: registerError } = await client
+  .from("math_problem_sets")
+  .update({
+    status: "registered"
+  })
+  .eq("id", currentProblemSetId);
+
+if (registerError) {
+  console.error("⑤ 最終登録エラー:", registerError);
+
+  submitButton.disabled = false;
+  submitButton.textContent = "登録を完了する";
+
+  alert("登録に失敗しました。もう一度お試しください。");
+  return;
+}
+
+submitButton.disabled = true;
+submitButton.textContent = "登録済み";
+    
+alert("問題セットの登録が完了しました。");
+
+// 確認画面を再読み込み
+await loadRegistrationSummary();
+    
+  });
+    
 async function loadRegistrationSummary() {
+  registrationWarnings = [];
+
+// 確認画面の読み込み中は登録ボタンを無効化
+const loadingSubmitButton = document.getElementById(
+  "register-final-submit-btn"
+);
+
+loadingSubmitButton.disabled = true;
+loadingSubmitButton.textContent = "確認情報を読み込み中...";
+  
   const summaryArea =
     document.getElementById("register-step-5-summary");
 
@@ -1983,6 +2076,8 @@ async function loadRegistrationSummary() {
     return;
   }
 
+
+  
   console.log("⑤ 確認・登録：問題セット情報", problemSet);
 
   // 大学入試の詳細情報を取得
@@ -2089,6 +2184,11 @@ if (problemsError) {
     "⑤ 大問情報の取得エラー:",
     problemsError
   );
+
+  summaryArea.textContent =
+    "大問情報の取得に失敗しました。再読み込みしてください。";
+
+  return;
 }
 
 console.log("⑤ 確認・登録：大問一覧", problems);
@@ -2116,6 +2216,11 @@ if (middleCategoryError) {
     "⑤ 中分類マスタの取得エラー:",
     middleCategoryError
   );
+
+  summaryArea.textContent =
+    "中分類マスタの取得に失敗しました。再読み込みしてください。";
+
+  return;
 }
 
 console.log("⑤ 中分類マスタ:", middleCategoryMaster);
@@ -2132,10 +2237,14 @@ if (problemIds.length > 0) {
     .in("problem_id", problemIds);
 
   if (error) {
-    console.error("⑤ 関連分野の取得エラー:", error);
-  } else {
-    relatedFields = data || [];
-  }
+  console.error("⑤ 関連分野の取得エラー:", error);
+
+  summaryArea.textContent =
+    "関連分野の取得に失敗しました。再読み込みしてください。";
+
+  return;
+} else {
+  relatedFields = data || [];
 }
 
 console.log("⑤ 関連分野:", relatedFields);
@@ -2150,10 +2259,14 @@ if (problemIds.length > 0) {
     .in("problem_id", problemIds);
 
   if (error) {
-    console.error("⑤ 内容タグの取得エラー:", error);
-  } else {
-    problemContentTags = data || [];
-  }
+  console.error("⑤ 内容タグの取得エラー:", error);
+
+  summaryArea.textContent =
+    "内容タグの取得に失敗しました。再読み込みしてください。";
+
+  return;
+} else {
+  problemContentTags = data || [];
 }
 
 console.log("⑤ 内容タグ:", problemContentTags);
@@ -2169,6 +2282,11 @@ if (contentTagMasterError) {
     "⑤ 内容タグマスタの取得エラー:",
     contentTagMasterError
   );
+
+  summaryArea.textContent =
+    "内容タグマスタの取得に失敗しました。再読み込みしてください。";
+
+  return;
 }
 
 console.log("⑤ 内容タグマスタ:", contentTagMaster);
@@ -2183,10 +2301,14 @@ if (problemIds.length > 0) {
     .in("problem_id", problemIds);
 
   if (error) {
-    console.error("⑤ 解法タグの取得エラー:", error);
-  } else {
-    problemMethodTags = data || [];
-  }
+  console.error("⑤ 解法タグの取得エラー:", error);
+
+  summaryArea.textContent =
+    "解法タグの取得に失敗しました。再読み込みしてください。";
+
+  return;
+} else {
+  problemMethodTags = data || [];
 }
 
 console.log("⑤ 解法タグ:", problemMethodTags);
@@ -2202,6 +2324,11 @@ if (methodTagMasterError) {
     "⑤ 解法タグマスタの取得エラー:",
     methodTagMasterError
   );
+
+  summaryArea.textContent =
+    "解法タグマスタの取得に失敗しました。再読み込みしてください。";
+
+  return;
 }
 
 console.log("⑤ 解法タグマスタ:", methodTagMaster);
@@ -2247,6 +2374,13 @@ fields.forEach(([label, value]) => {
 
 summaryArea.replaceChildren(basicInfo);
 
+// 問題セット全体の要確認フラグを警告一覧に追加
+if (problemSet.needs_review) {
+  registrationWarnings.push(
+    "問題セット全体：要確認"
+  );
+}
+  
 // 大問一覧の表示
 const problemsSection = document.createElement("div");
 problemsSection.style.marginTop = "24px";
@@ -2301,6 +2435,19 @@ console.log(
   `⑤ 第${problem.order_no}問の未入力項目:`,
   missingItems
 );
+
+// 未入力項目を最終登録時の警告一覧に追加
+if (missingItems.length > 0) {
+  registrationWarnings.push(
+    `第${problem.order_no}問：未入力項目（${missingItems.join("、")}）`
+  );
+}
+// 大問の要確認フラグを警告一覧に追加
+if (problem.needs_review) {
+  registrationWarnings.push(
+    `第${problem.order_no}問：要確認`
+  );
+}
     
     const fields = [
       ["問題コード", problem.problem_code],
@@ -2415,6 +2562,10 @@ if (
     warning.textContent =
       `⚠ 数学の満点（${mathTotalScore}点）と大問の配点合計（${totalProblemScore}点）が一致していません。`;
 
+    registrationWarnings.push(
+  `数学の満点（${mathTotalScore}点）と大問の配点合計（${totalProblemScore}点）が一致していません。`
+　　);
+    
     scoreSummary.appendChild(warning);
   }
 }
@@ -2422,7 +2573,23 @@ if (
 summaryArea.appendChild(scoreSummary);
   
 }
-    
+
+// 確認画面の読み込み完了後に登録ボタンを設定
+const finalSubmitButton = document.getElementById(
+  "register-final-submit-btn"
+);
+
+if (problemSet.status === "registered") {
+  finalSubmitButton.disabled = true;
+  finalSubmitButton.textContent = "登録済み";
+} else if (problemSet.status === "draft") {
+  finalSubmitButton.disabled = false;
+  finalSubmitButton.textContent = "登録を完了する";
+} else {
+  finalSubmitButton.disabled = true;
+  finalSubmitButton.textContent = "登録できません";
+}
+} 
 　　/* ===== 問題登録：大問一覧読み込み ===== */
 
 async function loadMajorProblems() {
