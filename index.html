@@ -2032,6 +2032,36 @@ if (universityExamDetail?.university_id) {
 }
 
 console.log("⑤ 確認・登録：大学名", universityName);
+
+// 対象学部・学科を取得
+const { data: targetData, error: targetError } =
+  await client
+    .from("math_problem_set_targets")
+    .select(`
+      sort_order,
+      faculty:math_faculties(name),
+      department:math_departments(name)
+    `)
+    .eq("problem_set_id", currentProblemSetId)
+    .order("sort_order", { ascending: true });
+
+if (targetError) {
+  console.error(
+    "対象学部・学科の取得エラー:",
+    targetError
+  );
+}
+
+const targetNames = (targetData || []).map(item => {
+  const facultyName = item.faculty?.name ?? "";
+  const departmentName = item.department?.name ?? "";
+
+  return [facultyName, departmentName]
+    .filter(Boolean)
+    .join("・");
+});
+
+console.log("⑤ 対象学部・学科:", targetNames);
   
 　// 問題セットの基本情報を表示
 const basicInfo = document.createElement("div");
@@ -2045,6 +2075,10 @@ const fields = [
   ["年度", problemSet.year],
   ["入試区分", problemSet.source_type],
   ["大学名", universityName],
+  ["入試日程", universityExamDetail?.admission_type],
+  ["文理区分", universityExamDetail?.humanities_science_type],
+  ["対象範囲", universityExamDetail?.target_scope],
+  ["対象学部・学科", targetNames.length > 0 ? targetNames.join("、") : null],
   [
     "試験時間",
     problemSet.exam_time_minutes == null
