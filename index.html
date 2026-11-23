@@ -1008,7 +1008,24 @@
 </div>
   </div>
 
-  <div style="margin-top:24px;">
+  <!-- ② 資料アップロード：操作ボタン -->
+<div style="
+  margin-top:24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+">
+
+  <button
+    type="button"
+    id="register-step-2-back-button"
+    class="secondary-button"
+  >
+    ① 問題セットへ戻る
+  </button>
+
   <button
     type="button"
     id="register-step-2-next-button"
@@ -1016,6 +1033,7 @@
   >
     ③ 大問分割へ
   </button>
+
 </div>
   
 </section>
@@ -4990,6 +5008,24 @@ registerStep3NextButton.addEventListener(
   }
 );
 
+/* ===== 問題登録：STEP 2 → STEP 1 ===== */
+
+document.getElementById("register-step-2-back-button")
+  .addEventListener("click", () => {
+
+    // ② 資料アップロードを非表示
+    document.getElementById("register-step-2")
+      .style.display = "none";
+
+    // ① 問題セットを表示
+    document.getElementById("register-step-1")
+      .style.display = "block";
+
+    // ページの先頭へ移動
+    window.scrollTo(0, 0);
+
+  });
+    
 /* ===== 問題登録：STEP 3 → STEP 2 ===== */
 
 document.getElementById("register-step-3-back-button")
