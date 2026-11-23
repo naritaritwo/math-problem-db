@@ -1029,7 +1029,18 @@
   </p>
 
   <div class="card">
-    <h3>問題資料</h3>
+    <h3>切り抜き対象の資料</h3>
+
+    <div style="margin-bottom:20px;">
+      <label for="split-file-role">
+        <strong>資料の種類</strong>
+      </label>
+
+      <select id="split-file-role" style="margin-left:12px;">
+        <option value="problem">問題画像</option>
+        <option value="solution">解答・解説画像</option>
+      </select>
+    </div>
 
     <p>
       登録した問題画像を確認し、大問の範囲を指定します。
@@ -4308,7 +4319,17 @@ async function loadProblemSplitFiles() {
   const pages =
     document.getElementById("problem-split-pages");
 
-  status.textContent = "問題資料を読み込んでいます...";
+    const fileRole =
+    document.getElementById("split-file-role").value;
+
+  const fileLabel =
+    fileRole === "solution"
+      ? "解答・解説資料"
+      : "問題資料";
+
+  status.textContent =
+    fileLabel + "を読み込んでいます...";
+
   pages.innerHTML = "";
 
   const { data: files, error } =
@@ -4322,7 +4343,7 @@ async function loadProblemSplitFiles() {
         display_order
       `)
       .eq("problem_set_id", currentProblemSetId)
-      .eq("file_role", "problem")
+      .eq("file_role", fileRole)
       .order("display_order", { ascending: true });
 
   if (error) {
@@ -4388,7 +4409,7 @@ console.log(
 );
   
   status.textContent =
-    files.length + "件の問題資料を読み込みました。";
+  　files.length + "件の" + fileLabel + "を読み込みました。";
 
   console.log(
     "大問分割用問題資料:",
@@ -4839,6 +4860,28 @@ if (countError) {
     alert("範囲を追加しました。");
   }
 );
+
+　/* ===== 大問分割：資料の種類を切り替え ===== */
+
+document.getElementById("split-file-role")
+  .addEventListener("change", async () => {
+
+    // 選択中の切り抜き範囲をリセット
+    pendingProblemRegion = null;
+
+    document.getElementById(
+      "save-problem-region-button"
+    ).disabled = true;
+
+    document.getElementById(
+      "problem-region-status"
+    ).textContent =
+      "画像上で範囲をドラッグしてください。";
+
+    // 選択した種類の画像を読み込む
+    await loadProblemSplitFiles();
+
+  });
     
 　/* ===== 問題登録：STEP 2 → STEP 3 ===== */
 
