@@ -1088,7 +1088,24 @@
   </div>
 </div>
   </div>
-  <div style="margin-top:24px;">
+  <!-- ③ 大問分割：操作ボタン -->
+<div style="
+  margin-top:24px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+">
+
+  <button
+    type="button"
+    id="register-step-3-back-button"
+    class="secondary-button"
+  >
+    ② 資料アップロードへ戻る
+  </button>
+
   <button
     type="button"
     id="register-step-3-next-button"
@@ -1096,6 +1113,7 @@
   >
     ④ 大問情報へ
   </button>
+
 </div>
 </section>
 
@@ -4972,6 +4990,24 @@ registerStep3NextButton.addEventListener(
   }
 );
 
+/* ===== 問題登録：STEP 3 → STEP 2 ===== */
+
+document.getElementById("register-step-3-back-button")
+  .addEventListener("click", () => {
+
+    // ③ 大問分割を非表示
+    document.getElementById("register-step-3")
+      .style.display = "none";
+
+    // ② 資料アップロードを表示
+    document.getElementById("register-step-2")
+      .style.display = "block";
+
+    // ページの先頭へ移動
+    window.scrollTo(0, 0);
+
+  });
+    
 /* ===== 問題登録：STEP 4 → STEP 3 ===== */
 
 const registerStep4BackButton =
