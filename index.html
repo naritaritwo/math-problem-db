@@ -1136,6 +1136,16 @@
     
   </div>
 
+<div style="margin-top:24px; margin-bottom:16px;">
+  <button
+    type="button"
+    id="register-step-4-back-button"
+    class="secondary-button"
+  >
+    ③ 大問分割へ戻る
+  </button>
+</div>
+   
  <div style="margin-top:24px; text-align:right;">
   <button
     type="button"
@@ -4943,6 +4953,32 @@ registerStep3NextButton.addEventListener(
   }
 );
 
+/* ===== 問題登録：STEP 4 → STEP 3 ===== */
+
+const registerStep4BackButton =
+  document.getElementById("register-step-4-back-button");
+
+registerStep4BackButton.addEventListener(
+  "click",
+  async () => {
+
+    // ④ 大問情報を非表示
+    document.getElementById("register-step-4")
+      .style.display = "none";
+
+    // ③ 大問分割を表示
+    document.getElementById("register-step-3")
+      .style.display = "block";
+
+    // 問題画像・解答画像と大問一覧を再読み込み
+    await loadProblemSplitFiles();
+    await loadMajorProblems();
+
+    // ページの先頭へ移動
+    window.scrollTo(0, 0);
+  }
+);
+    
 // ④ 大問情報 → ⑤ 確認・登録
 const registerStep4NextButton =
   document.getElementById("register-step-4-next-button");
