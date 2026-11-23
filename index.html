@@ -5551,13 +5551,7 @@ const registerNextButton =
 registerNextButton.addEventListener(
   "click",
   async () => {
-    /* すでに下書きを作成済みなら新規作成しない */
-    if (currentProblemSetId) {
-      alert(
-        "この問題セットの下書きはすでに作成されています。"
-      );
-      return;
-    }
+
     const sourceType =
       document.getElementById("register-source-type").value;
 
